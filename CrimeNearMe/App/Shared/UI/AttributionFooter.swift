@@ -1,0 +1,24 @@
+//
+//  AttributionFooter.swift
+//  CrimeNearMe
+//
+//  Created by Mylo on 30/08/2025.
+//
+
+
+import SwiftUI
+
+struct AttributionFooter: View {
+    var body: some View {
+        Text("Contains public sector information licensed under the Open Government Licence v3.0")
+            .font(.footnote)
+            .multilineTextAlignment(.center)
+            .foregroundStyle(.secondary)
+            .padding(.top, 8)
+            .onTapGesture {
+                if let url = URL(string: "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/") {
+                    UIApplication.shared.open(url)
+                }
+            }
+    }
+}
