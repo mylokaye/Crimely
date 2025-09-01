@@ -123,7 +123,7 @@ struct CrimeNearMeApp: App {
                         )
                     }
                 }
-                print("ERROR loading data on app launch:", error.localizedDescription)
+                AppLogger.error.error("Failed to load data on app launch: \(error.localizedDescription)")
             }
         }
     }

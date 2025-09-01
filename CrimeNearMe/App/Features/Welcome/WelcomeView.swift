@@ -195,7 +195,7 @@ struct WelcomeView: View {
                 coord = locationManager.coordinate
             }
             let anchor = validateManchesterCoordinate(coord)
-            print("DEBUG anchor =", anchor.latitude, anchor.longitude)
+            AppLogger.location.debug("Location resolved to: \(anchor.latitude), \(anchor.longitude)")
             
             // Immediately route to City Summary with placeholders to avoid flashing the map
             let placeholderTotals = Totals(total: 0, serious: 0)
@@ -219,7 +219,7 @@ struct WelcomeView: View {
                         polys: Defaults.manchesterPolys,
                         from: Date()
                     )
-                    print("DEBUG monthsUsed =", months, "mergedCount =", crimes.count)
+                    AppLogger.api.debug("Months queried: \(months), total crimes: \(crimes.count)")
                     let monthISO = months.first ?? PoliceAPI.isoMonth(Date())
 
                     let seriousCount = crimes.filter { crime in
@@ -240,7 +240,7 @@ struct WelcomeView: View {
                     }
                 } catch {
                     // Leave placeholder city summary; optionally show a small error chip there
-                    print("ERROR Diagnostic 3-month poly fetch failed:", error.localizedDescription)
+                    AppLogger.error.error("Failed to fetch crime data: \(error.localizedDescription)")
                 }
             }
             
