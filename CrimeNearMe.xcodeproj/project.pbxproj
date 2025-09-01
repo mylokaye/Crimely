@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		246C8B212E64F7010001736A /* welcomepolice in Resources */ = {isa = PBXBuildFile; fileRef = 246C8B202E64F7010001736A /* welcomepolice */; };
+		246C8B232E64F7C70001736A /* Merriweather-var.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 246C8B222E64F7C70001736A /* Merriweather-var.ttf */; };
+		246C8B7B2E6569CA0001736A /* bg.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 246C8B7A2E6569CA0001736A /* bg.jpg */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		24D511E42E632FE500399179 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,6 +30,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		246C8B202E64F7010001736A /* welcomepolice */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = welcomepolice; sourceTree = "<group>"; };
+		246C8B222E64F7C70001736A /* Merriweather-var.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Merriweather-var.ttf"; sourceTree = "<group>"; };
+		246C8B7A2E6569CA0001736A /* bg.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = bg.jpg; sourceTree = "<group>"; };
 		24D511D22E632FE400399179 /* CrimeNearMe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CrimeNearMe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		24D511E32E632FE500399179 /* CrimeNearMeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CrimeNearMeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		24D511ED2E632FE500399179 /* CrimeNearMeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CrimeNearMeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -101,7 +110,10 @@
 		24D511C92E632FE400399179 = {
 			isa = PBXGroup;
 			children = (
+				246C8B7A2E6569CA0001736A /* bg.jpg */,
+				246C8B222E64F7C70001736A /* Merriweather-var.ttf */,
 				24D512162E63335600399179 /* manchester.gpx */,
+				246C8B202E64F7010001736A /* welcomepolice */,
 				24D511D42E632FE400399179 /* CrimeNearMe */,
 				24D511E62E632FE500399179 /* CrimeNearMeTests */,
 				24D511F02E632FE500399179 /* CrimeNearMeUITests */,
@@ -239,6 +251,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				246C8B7B2E6569CA0001736A /* bg.jpg in Resources */,
+				246C8B232E64F7C70001736A /* Merriweather-var.ttf in Resources */,
+				246C8B212E64F7010001736A /* welcomepolice in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

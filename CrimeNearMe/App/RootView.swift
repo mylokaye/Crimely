@@ -23,9 +23,10 @@ struct RootView: View {
             case .welcome:
                 WelcomeView(locationManager: locationManager, appState: $appState)
 
+            case .loading:
+                LoadingView()
+
             case .city(let anchor, let totals, let monthISO, let place, let byCategory):
-                
-                
                 CitySummaryView(anchor: anchor,
                                 totals: totals,
                                 monthISO: monthISO,
@@ -63,14 +64,19 @@ struct RootView_Previews: PreviewProvider {
             CategoryCount(category: "Vehicle crime", count: 2)
         ]
 
-        RootView(appState: .constant(.city(anchor: anchor,
-                                           totals: totals,
-                                           monthISO: "2025-06",
-                                           place: "Manchester",
-                                           byCategory: byCategory)))
-        
-        
+        Group {
+            RootView(appState: .constant(.welcome))
+                .previewDisplayName("Welcome State")
+            
+            RootView(appState: .constant(.loading))
+                .previewDisplayName("Loading State")
+            
+            RootView(appState: .constant(.city(anchor: anchor,
+                                               totals: totals,
+                                               monthISO: "2025-06",
+                                               place: "Manchester",
+                                               byCategory: byCategory)))
+                .previewDisplayName("City State")
+        }
     }
-    
-    
 }

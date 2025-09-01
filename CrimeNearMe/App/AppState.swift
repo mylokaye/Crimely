@@ -9,12 +9,15 @@ import CoreLocation
 
 enum AppState: Equatable {
     case welcome        // first screen - asks for permission
+    case loading        // loading screen while fetching data
     case city(anchor: CLLocationCoordinate2D, totals: Totals, monthISO: String, place: String, byCategory: [CategoryCount])
     case map(anchor: CLLocationCoordinate2D, totals: Totals, monthISO: String, place: String, byCategory: [CategoryCount])
 
     static func == (lhs: AppState, rhs: AppState) -> Bool {
         switch (lhs, rhs) {
         case (.welcome, .welcome):
+            return true
+        case (.loading, .loading):
             return true
         case let (.city(la, lt, lm, lp, lbc), .city(ra, rt, rm, rp, rbc)):
             return la.latitude == ra.latitude &&
