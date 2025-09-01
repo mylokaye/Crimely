@@ -37,13 +37,13 @@ private struct CrimeRowView: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {
                     Text(title)
-                        .font(.title3.weight(.semibold))
+                        .font(.custom("Merriweather-var", size: 20).weight(.semibold))
                     Text("(\(count))")
-                        .font(.title3.weight(.regular))
+                        .font(.custom("Merriweather-var", size: 20).weight(.regular))
                         .foregroundStyle(.secondary)
                 }
                 Text(subtitle)
-                    .font(.body)
+                    .font(.custom("Merriweather-var", size: 17))
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -100,8 +100,9 @@ private struct CrimeDataCard: View {
             // Header (V1 title)
             HStack {
                 Spacer()
-                Text("Crime Data")
-                    .font(.title2.weight(.semibold))
+                Text(place)
+                    .font(.custom("Merriweather-var", size: 22).weight(.semibold))
+                    .multilineTextAlignment(.center)
                 Spacer()
                 Button(action: onProfile) {
                     Image(systemName: "person.circle.fill")
@@ -180,6 +181,7 @@ struct MapView: View {
     // Pull-over state (V1)
     @State private var isExpanded = false
     @State private var cardContentHeight: CGFloat = 480
+    @State private var shieldPulse = false
     private let collapsedCardHeight: CGFloat = 96
 
     init(anchor: CLLocationCoordinate2D,
@@ -203,38 +205,83 @@ struct MapView: View {
     }
 
     var body: some View {
-        Group {
-            if #available(iOS 17.0, *) {
-                Map(position: $position) {
-                    Annotation(place, coordinate: anchor) { AnchorDot(label: place) }
+        ZStack {
+            // Map
+            Group {
+                if #available(iOS 17.0, *) {
+                    Map(position: $position) {
+                        Annotation(place, coordinate: anchor) { AnchorDot(label: place) }
+                    }
+                    .mapStyle(.standard)
+                } else {
+                    Map(coordinateRegion: $legacyRegion)
                 }
-                .mapStyle(.standard)
-            } else {
-                Map(coordinateRegion: $legacyRegion)
+            }
+            
+            // Shield icon overlay in top right
+            VStack {
+                HStack {
+                    Spacer()
+                    
+                    Button(action: {}) {
+                        ZStack {
+                            Circle()
+                                .fill(Color(hex: "2D4A8B").opacity(0.15))
+                                .frame(width: 50, height: 50)
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color(hex: "2D4A8B").opacity(0.2), lineWidth: 1)
+                                )
+                                .scaleEffect(shieldPulse ? 1.05 : 1.0)
+                                .animation(
+                                    Animation.spring(response: 3.0, dampingFraction: 0.8)
+                                        .repeatForever(autoreverses: true),
+                                    value: shieldPulse
+                                )
+                            
+                            Image(systemName: "shield.checkered")
+                                .font(.title2)
+                                .foregroundColor(Color(hex: "2D4A8B"))
+                        }
+                    }
+                    .padding(.trailing, 24)
+                }
+                .padding(.top, 20)
+                
+                Spacer()
+            }
+            
+            // Bottom card overlay
+            VStack {
+                Spacer()
+                CrimeDataCard(
+                    place: place,
+                    totals: totals,
+                    monthISO: monthISO,
+                    byCategory: byCategory,
+                    onProfile: {},
+                    isExpanded: $isExpanded,
+                    onHeightChange: { h in cardContentHeight = min(h, UIScreen.main.bounds.height * 0.9) }
+                )
+                .frame(height: isExpanded ? cardContentHeight : collapsedCardHeight)
+                .animation(.spring(response: 0.35, dampingFraction: 0.9), value: isExpanded)
+                .padding(.bottom)
             }
         }
-        .overlay(alignment: .bottom) {
-            CrimeDataCard(
-                place: place,
-                totals: totals,
-                monthISO: monthISO,
-                byCategory: byCategory,
-                onProfile: {},
-                isExpanded: $isExpanded,
-                onHeightChange: { h in cardContentHeight = min(h, UIScreen.main.bounds.height * 0.9) }
-            )
-            .frame(height: isExpanded ? cardContentHeight : collapsedCardHeight)
-            .animation(.spring(response: 0.35, dampingFraction: 0.9), value: isExpanded)
-            .padding(.bottom)
+        .onAppear {
+            // Start shield pulse animation
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                shieldPulse = true
+            }
         }
         .navigationTitle(place)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 VStack(spacing: 2) {
-                    Text(place).font(.headline)
+                    Text(place).font(.custom("Merriweather-var", size: 17).weight(.semibold))
                     Text("\(totals.total) reports • \(PoliceAPI.humanMonth(monthISO))")
-                        .font(.caption)
+                        .font(.custom("Merriweather-var", size: 12))
                         .foregroundStyle(.secondary)
                 }
             }
