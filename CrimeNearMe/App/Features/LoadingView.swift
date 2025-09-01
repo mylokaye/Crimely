@@ -7,15 +7,28 @@
 
 import SwiftUI
 
+/// Loading screen displayed while fetching crime data from the API
+/// 
+/// This view provides an engaging loading experience with animated text messages,
+/// pulsing dots, and gradient backgrounds. It cycles through various status messages
+/// to give users feedback about the data loading process.
 struct LoadingView: View {
+    /// Current index in the messages array for text animation
     @State private var currentIndex = 0
+    
+    /// Progress value for potential progress bar (currently unused)
     @State private var progress: Double = 0
+    
+    /// Controls the dot loading animation state
     @State private var dotAnimation = false
+    
+    /// Controls the shield icon pulse animation
     @State private var shieldPulse = false
     
+    /// Array of status messages shown during loading
     private let messages = [
         "Querying regional crime reports",
-        "Matching reported incidents",
+        "Matching reported incidents", 
         "Checking recent reported crimes",
         "Calculating area safety index",
         "Eliminating duplicate incidents",
@@ -44,8 +57,7 @@ struct LoadingView: View {
             VStack(spacing: 40) {
                 Spacer()
                 
-                // MARK: - Text Animation Feature
-                // Feature starts here
+                // MARK: - Animated Status Messages
                 VStack(spacing: 30) {
                     Text(messages[currentIndex])
                         .multilineTextAlignment(.center)
@@ -61,10 +73,8 @@ struct LoadingView: View {
                                 removal: .scale(scale: 1.05).combined(with: .opacity).combined(with: .blur(radius: 2))
                             )
                         )
-                // Feature ends here
                     
-                    // MARK: - Loading Dots Animation
-                    // Feature starts here
+                    // MARK: - Animated Loading Dots
                     HStack(spacing: 12) {
                         ForEach(0..<3, id: \.self) { index in
                             Circle()
@@ -80,7 +90,6 @@ struct LoadingView: View {
                                 )
                         }
                     }
-                    // Feature ends here
                 }
                 
                 Spacer()
@@ -124,8 +133,14 @@ struct LoadingView: View {
         }
     }
     
+    /// Initializes all animations when the view appears
+    /// 
+    /// Starts three types of animations with staggered timing:
+    /// 1. Text message cycling every 2 seconds
+    /// 2. Dot loading animation with spring effects
+    /// 3. Shield pulse animation for visual interest
     private func startAnimations() {
-        // Start text cycling with smooth transitions
+        // Cycle through status messages with smooth spring transitions
         Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
             withAnimation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.3)) {
                 currentIndex = (currentIndex + 1) % messages.count
@@ -137,7 +152,7 @@ struct LoadingView: View {
             dotAnimation = true
         }
         
-        // Start shield pulse with delay
+        // Start shield pulse animation with additional delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             shieldPulse = true
         }
@@ -210,26 +225,6 @@ extension AnyTransition {
             active: BlurTransitionModifier(radius: radius),
             identity: BlurTransitionModifier(radius: 0)
         )
-    }
-}
-
-// MARK: - Helpers
-
-extension Color {
-    init(hex: String) {
-        var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        if hexSanitized.hasPrefix("#") {
-            hexSanitized.removeFirst()
-        }
-        
-        var rgb: UInt64 = 0
-        Scanner(string: hexSanitized).scanHexInt64(&rgb)
-        
-        let r = Double((rgb >> 16) & 0xFF) / 255
-        let g = Double((rgb >> 8) & 0xFF) / 255
-        let b = Double(rgb & 0xFF) / 255
-        
-        self.init(red: r, green: g, blue: b)
     }
 }
 

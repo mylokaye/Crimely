@@ -1,6 +1,10 @@
 import SwiftUI
 import CoreLocation
 
+/// The main entry point for the CrimeNearMe iOS application.
+/// 
+/// This app displays crime statistics for the Manchester area using data from the UK Police API.
+/// It manages user onboarding, location permissions, and navigation between different app states.
 @main
 struct CrimeNearMeApp: App {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
@@ -30,15 +34,27 @@ struct CrimeNearMeApp: App {
         }
     }
     
+    /// Saves the user's current location coordinates to persistent storage
+    /// - Parameter coordinate: The location coordinate to save
     private func saveLastLocation(_ coordinate: CLLocationCoordinate2D) {
         lastLatitude = coordinate.latitude
         lastLongitude = coordinate.longitude
     }
     
+    /// Retrieves the last known location from persistent storage
+    /// - Returns: The last saved location coordinate, or Manchester center as fallback
     private var lastKnownLocation: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: lastLatitude, longitude: lastLongitude)
     }
     
+    /// Loads the latest crime data for the user's location
+    /// 
+    /// This method handles the complete data loading flow:
+    /// 1. Attempts to get fresh location from LocationManager
+    /// 2. Falls back to stored location if needed
+    /// 3. Fetches crime data from the Police API
+    /// 4. Processes and categorizes the crime data
+    /// 5. Updates the app state with the results
     private func loadLatestData() {
         Task {
             // Add a small delay to show loading screen
@@ -112,7 +128,9 @@ struct CrimeNearMeApp: App {
         }
     }
     
-    // Helper function
+    /// Ensures the coordinate is within Manchester boundaries, clamps to center if outside
+    /// - Parameter c: The coordinate to validate
+    /// - Returns: The validated coordinate or Manchester center if outside bounds
     private func clampToManchesterIfNeeded(_ c: CLLocationCoordinate2D?) -> CLLocationCoordinate2D {
         guard let c = c else { return Defaults.manchesterCenter }
         if c.latitude < Defaults.manchesterBBox.minLat ||

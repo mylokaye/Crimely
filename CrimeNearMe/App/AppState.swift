@@ -7,10 +7,30 @@
 
 import CoreLocation
 
+/// Represents the different states of the application navigation flow
+/// 
+/// The app follows a linear flow: welcome → loading → city summary → map view
 enum AppState: Equatable {
-    case welcome        // first screen - asks for permission
-    case loading        // loading screen while fetching data
+    /// Initial welcome screen that requests location permission from the user
+    case welcome
+    
+    /// Loading screen shown while fetching crime data from the API
+    case loading
+    
+    /// City summary screen displaying crime statistics overview
+    /// - anchor: The geographic center point for the data
+    /// - totals: Overall crime count statistics
+    /// - monthISO: The month for which data is displayed (YYYY-MM format)
+    /// - place: Human-readable place name (e.g., "Manchester")
+    /// - byCategory: Crime counts broken down by category
     case city(anchor: CLLocationCoordinate2D, totals: Totals, monthISO: String, place: String, byCategory: [CategoryCount])
+    
+    /// Map view showing detailed crime locations and categories
+    /// - anchor: The geographic center point for the data
+    /// - totals: Overall crime count statistics  
+    /// - monthISO: The month for which data is displayed (YYYY-MM format)
+    /// - place: Human-readable place name (e.g., "Manchester")
+    /// - byCategory: Crime counts broken down by category
     case map(anchor: CLLocationCoordinate2D, totals: Totals, monthISO: String, place: String, byCategory: [CategoryCount])
 
     static func == (lhs: AppState, rhs: AppState) -> Bool {
@@ -39,7 +59,13 @@ enum AppState: Equatable {
     }
 }
 
+/// Represents aggregate crime count statistics
+/// 
+/// This structure holds both total crime counts and the subset that are considered serious crimes
 struct Totals: Equatable {
+    /// Total number of reported crimes
     let total: Int
+    
+    /// Number of crimes classified as serious (e.g., violence, robbery, drugs & weapons)
     let serious: Int
 }
