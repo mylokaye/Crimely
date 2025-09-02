@@ -2,18 +2,43 @@
 //  PoliceAPI.swift
 //  CrimeNearMe
 //
-//  Updated: robust month fallback + multi-month fetch
+//  Service layer for interacting with the UK Police API (data.police.uk)
 //
 
 import Foundation
 
+/// Service class for fetching crime data from the UK Police API
+/// 
+/// This class provides methods to query crime data by location and date range.
+/// It includes robust error handling and fallback mechanisms for when data
+/// is unavailable for specific months or locations.
+/// 
+/// The UK Police API provides crime data with some limitations:
+/// - Data is typically 2-3 months behind current date
+/// - Some months may have no data available (404 responses)
+/// - Rate limiting may apply for high-frequency requests
 final class PoliceAPI {
+    /// Shared singleton instance
     static let shared = PoliceAPI()
+    
+    /// Base URL for the UK Police API
     private let base = URL(string: "https://data.police.uk/api")!
 
-    // MARK: - Public APIs
+    // MARK: - Public API Methods
 
-    /// Fetch crimes for a given month. If `poly` is provided, it is used instead of lat/lng.
+    /// Fetches crimes for a specific month and location
+    /// 
+    /// This method queries the UK Police API for crime data within a specific
+    /// time period and geographic area. You can specify either coordinates
+    /// or a polygon boundary for the search area.
+    /// 
+    /// - Parameters:
+    ///   - lat: Latitude coordinate (ignored if poly is provided)
+    ///   - lng: Longitude coordinate (ignored if poly is provided)
+    ///   - poly: Polygon boundary string in "lat1,lon1:lat2,lon2:..." format
+    ///   - isoMonth: Month in YYYY-MM format (e.g., "2024-06")
+    /// - Returns: Array of Crime objects for the specified criteria
+    /// - Throws: PoliceAPIError for various failure conditions
     func crimes(lat: Double? = nil, lng: Double? = nil, poly: String? = nil, isoMonth: String) async throws -> [Crime] {
         var comps = URLComponents(
             url: base.appendingPathComponent("crimes-street/all-crime"),
@@ -55,9 +80,18 @@ final class PoliceAPI {
         }
     }
 
-    
-    /// Fetch crimes across multiple polygons and multiple months, merged together (no dedup).
-    /// Always includes the previous `monthsBack` months including the current month.
+    /// Fetches crimes across multiple polygons and multiple months
+    /// 
+    /// This method performs bulk queries across multiple geographic areas
+    /// and time periods, merging all results into a single dataset.
+    /// It's used to get comprehensive coverage of the Manchester area.
+    /// 
+    /// - Parameters:
+    ///   - monthsBack: Number of months to query (including current month)
+    ///   - polys: Array of polygon boundary strings
+    ///   - start: Starting date for the query range
+    /// - Returns: Tuple containing the months queried and merged crime array
+    /// - Throws: PoliceAPIError if all queries fail
     func crimesLastMonths(
         monthsBack: Int,
         polys: [String],
@@ -179,9 +213,11 @@ final class PoliceAPI {
 
         return (monthsUsed, merged)
     }
-    // MARK: - Formatting
+    // MARK: - Date Formatting Utilities
 
-    /// yyyy-MM for API
+    /// Converts a Date to ISO month format required by the Police API
+    /// - Parameter date: The date to convert
+    /// - Returns: ISO month string in YYYY-MM format (e.g., "2024-06")
     static func isoMonth(_ date: Date) -> String {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM"
@@ -202,12 +238,22 @@ final class PoliceAPI {
     }
 }
 
-// MARK: - Errors & helpers
+// MARK: - Error Handling
 
+/// Errors that can occur when interacting with the UK Police API
 enum PoliceAPIError: Error {
+    /// The requested month has no available crime data (404 response)
     case noDataForMonth
+    
+    /// HTTP error occurred with the given status code
     case http(Int)
-    case badBody(String) // keep a short snippet for logs
+    
+    /// Response body could not be parsed as expected format
+    /// Contains a snippet of the response body for debugging
+    case badBody(String)
 }
 
-struct PoliceErrorMessage: Decodable { let error: String }
+/// Helper structure for parsing API error responses
+struct PoliceErrorMessage: Decodable { 
+    let error: String 
+}

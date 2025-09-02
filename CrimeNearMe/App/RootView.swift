@@ -1,11 +1,21 @@
 import SwiftUI
 import CoreLocation
 
+/// The root view component that manages navigation between different app states
+/// 
+/// This view acts as the main navigation controller, rendering different screens
+/// based on the current AppState. It handles transitions between welcome, loading,
+/// city summary, and map views.
 struct RootView: View {
+    /// Binding to the current application state
     @Binding var appState: AppState
+    
+    /// Location manager instance for handling location updates
     @StateObject private var locationManager = LocationManager()
 
-    // Helper: clamp to Manchester if needed
+    /// Ensures coordinates are within Manchester boundaries
+    /// - Parameter c: Optional coordinate to validate
+    /// - Returns: Valid coordinate within Manchester bounds or Manchester center as fallback
     private func clampToManchesterIfNeeded(_ c: CLLocationCoordinate2D?) -> CLLocationCoordinate2D {
         guard let c = c else { return Defaults.manchesterCenter }
         if c.latitude < Defaults.manchesterBBox.minLat ||
@@ -21,16 +31,20 @@ struct RootView: View {
         NavigationStack {
             switch appState {
             case .welcome:
+                // Initial onboarding screen requesting location permission
                 WelcomeView(locationManager: locationManager, appState: $appState)
 
             case .loading:
+                // Loading screen shown while fetching crime data
                 LoadingView()
 
             case .city(let anchor, let totals, let monthISO, let place, let byCategory):
+                // Crime statistics summary view with navigation to map
                 CitySummaryView(anchor: anchor,
                                 totals: totals,
                                 monthISO: monthISO,
                                 place: place) {
+                    // Navigate to detailed map view when user taps "Show All"
                     appState = .map(anchor: anchor,
                                     totals: totals,
                                     monthISO: monthISO,
@@ -39,6 +53,7 @@ struct RootView: View {
                 }
 
             case .map(let anchor, let totals, let monthISO, let place, let byCategory):
+                // Detailed map view showing crime locations and categories
                 MapView(anchor: anchor,
                         totals: totals,
                         monthISO: monthISO,

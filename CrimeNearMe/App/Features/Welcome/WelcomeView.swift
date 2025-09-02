@@ -2,25 +2,43 @@
 //  WelcomeView.swift
 //  CrimeNearMe
 //
-//  3-month tiles fetch, totals + byCategory handoff
+//  Welcome and onboarding screen with location permission request
 //
 
 import SwiftUI
 import CoreLocation
 
+/// Brand color constants used throughout the welcome flow
 private enum Brand {
-    // #8E97FD, #7F88F0, #FFE1B3
+    /// Primary brand blue color (#8E97FD)
     static let base = Color(red: 142/255, green: 151/255, blue: 253/255)
+    
+    /// Darker variant of brand blue (#7F88F0)
     static let baseDark = Color(red: 127/255, green: 136/255, blue: 240/255)
+    
+    /// Button accent color - warm yellow (#FFE1B3)
     static let button = Color(red: 255/255, green: 225/255, blue: 179/255)
 }
 
+/// Welcome screen that handles user onboarding and location permission requests
+/// 
+/// This view presents the initial app interface with brand messaging and guides
+/// users through location permission setup. It automatically fetches crime data
+/// once permission is granted and transitions to the city summary view.
 struct WelcomeView: View {
+    /// Location manager for handling permission requests and coordinate updates
     @ObservedObject var locationManager: LocationManager
+    
+    /// Binding to the current application state for navigation
     @Binding var appState: AppState
     
+    /// Loading state indicator for button and UI updates
     @State private var isLoading = false
+    
+    /// Controls button interactivity during location processing
     @State private var buttonEnabled = true
+    
+    /// Controls display of data attribution sheet
     @State private var showAttribution = false
     
     var body: some View {
@@ -127,6 +145,7 @@ struct WelcomeView: View {
         }
     }
     
+    /// Creates attributed string with emphasized "crimes" text
     private var highlightedHeadline: AttributedString {
         var s = AttributedString("Find crimes in your local area")
         if let range = s.range(of: "crimes") {
@@ -135,6 +154,7 @@ struct WelcomeView: View {
         return s
     }
 
+    /// Dynamic button title based on current app state
     private var primaryButtonTitle: String {
         switch appState {
         case .welcome: return "ALLOW LOCATION ACCESS"
@@ -142,6 +162,7 @@ struct WelcomeView: View {
         }
     }
     
+    /// Accessibility label for the primary button
     private var buttonLabel: String {
         switch appState {
         case .welcome: return "Allow location"
@@ -149,6 +170,15 @@ struct WelcomeView: View {
         }
     }
     
+    /// Handles the main button tap action for location permission and data loading
+    /// 
+    /// This method orchestrates the complete onboarding flow:
+    /// 1. Requests location permission from the user
+    /// 2. Waits for coordinate response with timeout
+    /// 3. Validates coordinates are within Manchester bounds
+    /// 4. Shows placeholder city summary immediately
+    /// 5. Fetches real crime data in background
+    /// 6. Updates the city summary with actual data
     private func handleButtonTap() async {
         print("handleButtonTap fired; state=\(appState)")
         switch appState {
@@ -164,8 +194,8 @@ struct WelcomeView: View {
                 try? await Task.sleep(for: .milliseconds(150))
                 coord = locationManager.coordinate
             }
-            let anchor = clampToManchesterIfNeeded(coord)
-            print("DEBUG anchor =", anchor.latitude, anchor.longitude)
+            let anchor = validateManchesterCoordinate(coord)
+            AppLogger.location.debug("Location resolved to: \(anchor.latitude), \(anchor.longitude)")
             
             // Immediately route to City Summary with placeholders to avoid flashing the map
             let placeholderTotals = Totals(total: 0, serious: 0)
@@ -189,7 +219,7 @@ struct WelcomeView: View {
                         polys: Defaults.manchesterPolys,
                         from: Date()
                     )
-                    print("DEBUG monthsUsed =", months, "mergedCount =", crimes.count)
+                    AppLogger.api.debug("Months queried: \(months), total crimes: \(crimes.count)")
                     let monthISO = months.first ?? PoliceAPI.isoMonth(Date())
 
                     let seriousCount = crimes.filter { crime in
@@ -210,7 +240,7 @@ struct WelcomeView: View {
                     }
                 } catch {
                     // Leave placeholder city summary; optionally show a small error chip there
-                    print("ERROR Diagnostic 3-month poly fetch failed:", error.localizedDescription)
+                    AppLogger.error.error("Failed to fetch crime data: \(error.localizedDescription)")
                 }
             }
             
@@ -223,8 +253,10 @@ struct WelcomeView: View {
     }
 }
 
-// Clamp to Manchester bbox or fallback
-private func clampToManchesterIfNeeded(_ c: CLLocationCoordinate2D?) -> CLLocationCoordinate2D {
+/// Validates that coordinates are within Manchester boundaries
+/// - Parameter c: Optional coordinate to validate
+/// - Returns: Valid Manchester coordinate or center as fallback
+private func validateManchesterCoordinate(_ c: CLLocationCoordinate2D?) -> CLLocationCoordinate2D {
     guard let c = c else { return Defaults.manchesterCenter }
     if c.latitude < Defaults.manchesterBBox.minLat ||
         c.latitude > Defaults.manchesterBBox.maxLat ||
@@ -233,22 +265,6 @@ private func clampToManchesterIfNeeded(_ c: CLLocationCoordinate2D?) -> CLLocati
         return Defaults.manchesterCenter
     }
     return c
-}
-
-// Local helper (kept for parity with earlier versions)
-@inline(__always)
-private func haversineDistanceMeters(_ a: CLLocationCoordinate2D, _ b: CLLocationCoordinate2D) -> Double {
-    let r = 6_371_000.0
-    let dLat = (b.latitude - a.latitude) * .pi / 180
-    let dLon = (b.longitude - a.longitude) * .pi / 180
-    let la1 = a.latitude * .pi / 180
-    let la2 = b.latitude * .pi / 180
-    let h = sin(dLat/2)*sin(dLat/2) + sin(dLon/2)*sin(dLon/2) * cos(la1)*cos(la2)
-    return 2*r*asin(min(1, sqrt(h)))
-}
-
-private func logFetch(_ anchor: CLLocationCoordinate2D, month: String, total: Int, serious: Int, place: String) {
-    print("[API] \(place) @ \(anchor.latitude),\(anchor.longitude) — month=\(month) total=\(total) serious=\(serious)")
 }
 
 // MARK: - Preview
