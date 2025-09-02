@@ -181,7 +181,6 @@ struct MapView: View {
     // Pull-over state (V1)
     @State private var isExpanded = false
     @State private var cardContentHeight: CGFloat = 480
-    @State private var shieldPulse = false
     private let collapsedCardHeight: CGFloat = 96
 
     init(anchor: CLLocationCoordinate2D,
@@ -217,40 +216,6 @@ struct MapView: View {
                     Map(coordinateRegion: $legacyRegion)
                 }
             }
-            
-            // Shield icon overlay in top right
-            VStack {
-                HStack {
-                    Spacer()
-                    
-                    Button(action: {}) {
-                        ZStack {
-                            Circle()
-                                .fill(Color(hex: "2D4A8B").opacity(0.15))
-                                .frame(width: 50, height: 50)
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color(hex: "2D4A8B").opacity(0.2), lineWidth: 1)
-                                )
-                                .scaleEffect(shieldPulse ? 1.05 : 1.0)
-                                .animation(
-                                    Animation.spring(response: 3.0, dampingFraction: 0.8)
-                                        .repeatForever(autoreverses: true),
-                                    value: shieldPulse
-                                )
-                            
-                            Image(systemName: "shield.checkered")
-                                .font(.title2)
-                                .foregroundColor(Color(hex: "2D4A8B"))
-                        }
-                    }
-                    .padding(.trailing, 24)
-                }
-                .padding(.top, 20)
-                
-                Spacer()
-            }
-            
             // Bottom card overlay
             VStack {
                 Spacer()
@@ -266,12 +231,6 @@ struct MapView: View {
                 .frame(height: isExpanded ? cardContentHeight : collapsedCardHeight)
                 .animation(.spring(response: 0.35, dampingFraction: 0.9), value: isExpanded)
                 .padding(.bottom)
-            }
-        }
-        .onAppear {
-            // Start shield pulse animation
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                shieldPulse = true
             }
         }
         .navigationTitle(place)
