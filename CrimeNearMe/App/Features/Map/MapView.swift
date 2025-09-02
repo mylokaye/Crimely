@@ -52,6 +52,27 @@ private struct CrimeRowView: View {
     }
 }
 
+// Pull-over resting state view (UIKit recreation in SwiftUI)
+struct PullOverRestingView: View {
+    var body: some View {
+        ZStack {
+            // Shadow layer
+            RoundedRectangle(cornerRadius: 999, style: .continuous)
+                .fill(Color.white.opacity(0.5))
+                .frame(width: 359, height: 63)
+                .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 8)
+            // Overlay blend layer
+            RoundedRectangle(cornerRadius: 999, style: .continuous)
+                .fill(Color.white.opacity(0.1))
+                .frame(width: 359, height: 63)
+                .blendMode(.overlay)
+        }
+        .frame(width: 359, height: 63)
+        .padding(.leading, 22)
+        .padding(.top, 793) // Adjust for device/screen size in real use
+    }
+}
+
 // Bottom overlay card (pull-over)
 private struct CrimeDataCard: View {
     let place: String
