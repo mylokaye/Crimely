@@ -55,21 +55,17 @@ private struct CrimeRowView: View {
 // Pull-over resting state view (UIKit recreation in SwiftUI)
 struct PullOverRestingView: View {
     var body: some View {
-        ZStack {
-            // Shadow layer
-            RoundedRectangle(cornerRadius: 999, style: .continuous)
-                .fill(Color.white.opacity(0.5))
-                .frame(width: 359, height: 63)
-                .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 8)
-            // Overlay blend layer
-            RoundedRectangle(cornerRadius: 999, style: .continuous)
-                .fill(Color.white.opacity(0.1))
-                .frame(width: 359, height: 63)
-                .blendMode(.overlay)
+        ZStack(alignment: .top) {
+            RoundedRectangle(cornerRadius: 0, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .frame(height: 49)
+                .frame(maxWidth: .infinity)
+            Rectangle()
+                .fill(Color.black.opacity(0.08))
+                .frame(height: 0.5)
+                .frame(maxWidth: .infinity)
         }
-        .frame(width: 359, height: 63)
-        .padding(.leading, 22)
-        .padding(.top, 793) // Adjust for device/screen size in real use
+        .frame(height: 49)
     }
 }
 
@@ -109,38 +105,27 @@ private struct CrimeDataCard: View {
         }
     }
 
-    private let collapsedHeight: CGFloat = 96
+    private let collapsedHeight: CGFloat = 49 // Tab bar height
 
     var body: some View {
-        VStack(spacing: 12) {
-            // Grabber
-            Capsule().frame(width: 44, height: 5).opacity(0.15)
-                .contentShape(Rectangle())
-                .onTapGesture { withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) { isExpanded.toggle() } }
-
-            // Header (V1 title)
-            HStack {
-                Spacer()
-                Text(place)
-                    .font(.custom("Merriweather-var", size: 22).weight(.semibold))
-                    .multilineTextAlignment(.center)
-                Spacer()
-                Button(action: onProfile) {
-                    Image(systemName: "person.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(.white)
-                        .padding(10)
-                        .background(Circle().fill(Color.blue))
-                }
-                .accessibilityLabel("Profile")
-            }
-            .padding(.bottom, 4)
-
-            // Rows when expanded
+        VStack(spacing: 16) {
             if isExpanded {
+                // Grabber
+                Capsule()
+                    .frame(width: 44, height: 5)
+                    .opacity(0.18)
+                    .padding(.top, 12)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
+                            isExpanded.toggle()
+                        }
+                    }
+
+                // Rows when expanded
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 14) {
-                        ForEach(byCategory, id: \.category) { item in
+                    VStack(alignment: .leading, spacing: 18) {
+                        ForEach(byCategory, id: \ .category) { item in
                             CrimeRowView(
                                 iconName: icon(for: item.category),
                                 title: item.category.capitalized,
@@ -148,32 +133,45 @@ private struct CrimeDataCard: View {
                                 subtitle: subtitle(for: item.category)
                             )
                         }
-                        Color.clear.frame(height: 8)
+                        Color.clear.frame(height: 12)
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 8)
                     .background(
                         GeometryReader { proxy in
                             Color.clear
-                                .onAppear { onHeightChange(max(collapsedHeight + 60, proxy.size.height + 140)) }
-                                .onChange(of: proxy.size.height) { h in onHeightChange(max(collapsedHeight + 60, h + 140)) }
+                                .onAppear { onHeightChange(max(collapsedHeight + 80, proxy.size.height + 160)) }
+                                .onChange(of: proxy.size.height) { h in onHeightChange(max(collapsedHeight + 80, h + 160)) }
                         }
                     )
                 }
                 .scrollIndicators(.never)
+            } else {
+                Capsule()
+                    .frame(width: 44, height: 5)
+                    .opacity(0.18)
+                    .padding(.top, 8)
+                    .contentShape(Rectangle())
+                Text(place)
+                    .font(.system(size: 18))
+                    .fontWeight(.semibold)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(place.count > 10 ? 0.7 : 1.0)
+                    .frame(maxWidth: .infinity)
             }
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 28)
         .padding(.top, 8)
-        .padding(.bottom, 22)
+        .padding(.bottom, 32)
         .frame(maxWidth: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: 28, style: .continuous).fill(.ultraThinMaterial)
+            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                .fill(.ultraThickMaterial)
+                .shadow(color: Color.black.opacity(0.18), radius: 24, y: 8)
         )
-        .background(
-            RoundedRectangle(cornerRadius: 28, style: .continuous).strokeBorder(Color.black.opacity(0.06))
-        )
-        .shadow(color: Color.black.opacity(0.12), radius: 18, y: -2)
-        .padding(.horizontal)
+        // Remove border for liquid glass effect
+        .padding(.horizontal, 0)
         .gesture(
             DragGesture(minimumDistance: 8)
                 .onEnded { value in
@@ -202,7 +200,7 @@ struct MapView: View {
     // Pull-over state (V1)
     @State private var isExpanded = false
     @State private var cardContentHeight: CGFloat = 480
-    private let collapsedCardHeight: CGFloat = 96
+    private let collapsedCardHeight: CGFloat = 70 // Tab bar height
 
     init(anchor: CLLocationCoordinate2D,
          totals: Totals,
@@ -251,7 +249,8 @@ struct MapView: View {
                 )
                 .frame(height: isExpanded ? cardContentHeight : collapsedCardHeight)
                 .animation(.spring(response: 0.35, dampingFraction: 0.9), value: isExpanded)
-                .padding(.bottom)
+                .padding(.bottom, 16) // Move pullover up away from tab bar
+                .padding(.horizontal, 16) // Add horizontal padding to left and right for tab bar spacing
             }
         }
         .navigationTitle(place)
@@ -259,9 +258,9 @@ struct MapView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 VStack(spacing: 2) {
-                    Text(place).font(.custom("Merriweather-var", size: 17).weight(.semibold))
+                    Text(place).font(.custom("Merriweather-var", size: 18).weight(.semibold))
                     Text("\(totals.total) reports • \(PoliceAPI.humanMonth(monthISO))")
-                        .font(.custom("Merriweather-var", size: 12))
+                        .font(.custom("Merriweather-var", size: 18))
                         .foregroundStyle(.secondary)
                 }
             }

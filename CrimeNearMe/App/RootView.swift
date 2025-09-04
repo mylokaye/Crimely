@@ -28,39 +28,7 @@ struct RootView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            switch appState {
-            case .welcome:
-                // Initial onboarding screen requesting location permission
-                WelcomeView(locationManager: locationManager, appState: $appState)
-
-            case .loading:
-                // Loading screen shown while fetching crime data
-                LoadingView()
-
-            case .city(let anchor, let totals, let monthISO, let place, let byCategory):
-                // Crime statistics summary view with navigation to map
-                CitySummaryView(anchor: anchor,
-                                totals: totals,
-                                monthISO: monthISO,
-                                place: place) {
-                    // Navigate to detailed map view when user taps "Show All"
-                    appState = .map(anchor: anchor,
-                                    totals: totals,
-                                    monthISO: monthISO,
-                                    place: place,
-                                    byCategory: byCategory)
-                }
-
-            case .map(let anchor, let totals, let monthISO, let place, let byCategory):
-                // Detailed map view showing crime locations and categories
-                MapView(anchor: anchor,
-                        totals: totals,
-                        monthISO: monthISO,
-                        place: place,
-                        byCategory: byCategory)
-            }
-        }
+        MainTabView()
     }
 }
 
