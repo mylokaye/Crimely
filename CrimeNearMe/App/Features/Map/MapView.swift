@@ -54,6 +54,8 @@ struct MapView: View {
     @State private var position: MapCameraPosition // The camera position for the map
     @State private var legacyRegion: MKCoordinateRegion // Fallback region for older iOS versions
 
+    @StateObject private var locationManager = LocationManager() // Location manager to track user location
+
     // Pull-over state (V1)
     @State private var isExpanded = false // Tracks whether the pull-over card is expanded
     @State private var cardContentHeight: CGFloat = 480 // Height of the expanded card content
@@ -85,11 +87,51 @@ struct MapView: View {
             Group {
                 if #available(iOS 17.0, *) {
                     Map(position: $position) {
-                        Annotation(place, coordinate: anchor) { AnchorDot(label: place) }
+                        let annotationCoordinate = locationManager.coordinate ?? anchor
+                        let annotationLabel = locationManager.coordinate != nil ? "Your Location" : place
+
+                        Annotation(annotationLabel, coordinate: annotationCoordinate) {
+                            AnchorDot(label: annotationLabel)
+                        }
                     }
                     .mapStyle(.standard) // Standard map style
+                    .onAppear {
+                        if let userLocation = locationManager.coordinate {
+                            print("[DEBUG] User location onAppear: \(userLocation)")
+                            let userRegion = MKCoordinateRegion(
+                                center: userLocation,
+                                latitudinalMeters: Defaults.defaultRadiusMeters * 2,
+                                longitudinalMeters: Defaults.defaultRadiusMeters * 2
+                            )
+                            position = .region(userRegion)
+                        } else {
+                            print("[DEBUG] No user location available onAppear")
+                        }
+                    }
+                    .onChange(of: locationManager.coordinate) { newLocation in
+                        if let newLocation = newLocation {
+                            print("[DEBUG] User location updated: \(newLocation)")
+                            let userRegion = MKCoordinateRegion(
+                                center: newLocation,
+                                latitudinalMeters: Defaults.defaultRadiusMeters * 2,
+                                longitudinalMeters: Defaults.defaultRadiusMeters * 2
+                            )
+                            position = .region(userRegion)
+                        } else {
+                            print("[DEBUG] User location update received but is nil")
+                        }
+                    }
                 } else {
                     Map(coordinateRegion: $legacyRegion) // Fallback map for older iOS versions
+                        .onAppear {
+                            if let userLocation = locationManager.coordinate {
+                                legacyRegion = MKCoordinateRegion(
+                                    center: userLocation,
+                                    latitudinalMeters: Defaults.defaultRadiusMeters * 2,
+                                    longitudinalMeters: Defaults.defaultRadiusMeters * 2
+                                )
+                            }
+                        }
                 }
             }
             // Bottom card overlay

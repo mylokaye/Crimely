@@ -61,9 +61,12 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     /// Called when location updates are received
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if let c = locations.last?.coordinate {
+            print("[DEBUG] LocationManager didUpdateLocations: \(c)")
             coordinate = c
             // Stop updates after getting first location to conserve battery
             manager.stopUpdatingLocation()
+        } else {
+            print("[DEBUG] LocationManager didUpdateLocations: No valid location")
         }
     }
 }
