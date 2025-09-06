@@ -206,6 +206,7 @@ struct MapView: View {
                         showPOI: MapFeatureFlags.showPointsOfInterest,
                         showsBuildings: MapFeatureFlags.showsBuildings
                     )
+                    .ignoresSafeArea()
                 } else {
                     // Use SwiftUI Map unconditionally (iOS 18+ target)
                     Map(position: $position) {
@@ -217,6 +218,7 @@ struct MapView: View {
                         }
                     }
                     .mapStyle(MapFeatureFlags.mapStyle) // Use configured map style flag
+                    .ignoresSafeArea()
                     .onAppear {
                         if let userLocation = locationManager.coordinate {
                             let userRegion = MKCoordinateRegion(
