@@ -188,3 +188,17 @@ private struct MonthChip: View {
             )
     }
 }
+
+// MARK: - Preview
+@available(iOS 17.0, *)
+struct CitySummaryView_Previews: PreviewProvider {
+    static var previews: some View {
+        CitySummaryView(
+            anchor: CLLocationCoordinate2D(latitude: 53.4794, longitude: -2.2453),
+            totals: Totals(total: 16, serious: 3),
+            monthISO: "2025-06",
+            place: "Manchester",
+            onShowAll: {}
+        )
+    }
+}
