@@ -18,38 +18,46 @@ private struct AnchorDot: View {
         .accessibilityLabel(label)
     }
 }
-
-// Pull-over resting state view (UIKit recreation in SwiftUI)
+/*
+// // Pull-over resting state view (UIKit recreation in SwiftUI)
 struct PullOverRestingView: View {
     var body: some View {
         ZStack(alignment: .top) {
-            RoundedRectangle(cornerRadius: 0, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .frame(height: 29)
-                .frame(maxWidth: .infinity)
+            if #available(iOS 17.0, *) {
+                RoundedRectangle(cornerRadius: 0, style: .continuous)
+                    .fill(.ultraThinMaterial) // Provides a translucent material effect
+                    .frame(height: 9) // Height of the main rounded rectangle
+                    .frame(maxWidth: .infinity) // Makes it span the full width
+                    .glassEffect(.regular) // Adds a glass-like effect (iOS 17+ only)
+            } else {
+                RoundedRectangle(cornerRadius: 0, style: .continuous)
+                    .fill(.ultraThinMaterial) // Provides a translucent material effect
+                    .frame(height: 9) // Height of the main rounded rectangle
+                    .frame(maxWidth: .infinity) // Makes it span the full width
+            }
             Rectangle()
-                .fill(Color.black.opacity(0.08))
-                .frame(height: 0.5)
-                .frame(maxWidth: .infinity)
+                .fill(Color.black.opacity(0.01)) // Thin black line with slight transparency
+                .frame(height: 0.5) // Height of the thin line
+                .frame(maxWidth: .infinity) // Makes it span the full width
         }
-        .frame(height: 49)
+        .frame(height: 19) // Total height of the pull-over resting view
     }
 }
-
+ */
 struct MapView: View {
-    let anchor: CLLocationCoordinate2D
-    let totals: Totals
-    let monthISO: String
-    let place: String
-    let byCategory: [CategoryCount]
+    let anchor: CLLocationCoordinate2D // The center coordinate for the map
+    let totals: Totals // Total crime data to display
+    let monthISO: String // The month in ISO format (e.g., "2025-06")
+    let place: String // The name of the place (e.g., "Manchester")
+    let byCategory: [CategoryCount] // Crime data grouped by category
 
-    @State private var position: MapCameraPosition
-    @State private var legacyRegion: MKCoordinateRegion
+    @State private var position: MapCameraPosition // The camera position for the map
+    @State private var legacyRegion: MKCoordinateRegion // Fallback region for older iOS versions
 
     // Pull-over state (V1)
-    @State private var isExpanded = false
-    @State private var cardContentHeight: CGFloat = 480
-    private let collapsedCardHeight: CGFloat = 70 // Tab bar height
+    @State private var isExpanded = false // Tracks whether the pull-over card is expanded
+    @State private var cardContentHeight: CGFloat = 480 // Height of the expanded card content
+    private let collapsedCardHeight: CGFloat = 100 // Height from bottom of the card when collapsed
 
     init(anchor: CLLocationCoordinate2D,
          totals: Totals,
@@ -64,11 +72,11 @@ struct MapView: View {
 
         let region = MKCoordinateRegion(
             center: anchor,
-            latitudinalMeters: Defaults.defaultRadiusMeters * 2,
-            longitudinalMeters: Defaults.defaultRadiusMeters * 2
+            latitudinalMeters: Defaults.defaultRadiusMeters * 2, // Latitude span for the map region
+            longitudinalMeters: Defaults.defaultRadiusMeters * 2 // Longitude span for the map region
         )
-        _position = State(initialValue: .region(region))
-        _legacyRegion = State(initialValue: region)
+        _position = State(initialValue: .region(region)) // Initialize the camera position
+        _legacyRegion = State(initialValue: region) // Initialize the fallback region
     }
 
     var body: some View {
@@ -79,9 +87,9 @@ struct MapView: View {
                     Map(position: $position) {
                         Annotation(place, coordinate: anchor) { AnchorDot(label: place) }
                     }
-                    .mapStyle(.standard)
+                    .mapStyle(.standard) // Standard map style
                 } else {
-                    Map(coordinateRegion: $legacyRegion)
+                    Map(coordinateRegion: $legacyRegion) // Fallback map for older iOS versions
                 }
             }
             // Bottom card overlay
@@ -96,21 +104,21 @@ struct MapView: View {
                     isExpanded: $isExpanded,
                     onHeightChange: { h in cardContentHeight = min(h, UIScreen.main.bounds.height * 0.9) }
                 )
-                .frame(height: isExpanded ? cardContentHeight : collapsedCardHeight)
-                .animation(.spring(response: 0.35, dampingFraction: 0.9), value: isExpanded)
+                .frame(height: isExpanded ? cardContentHeight : collapsedCardHeight) // Adjust height based on state
+                .animation(.spring(response: 0.35, dampingFraction: 0.9), value: isExpanded) // Smooth animation for expansion
                 .padding(.bottom, 16) // Move pullover up away from tab bar
                 .padding(.horizontal, 16) // Add horizontal padding to left and right for tab bar spacing
             }
         }
-        .navigationTitle(place)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(place) // Set the navigation title to the place name
+        .navigationBarTitleDisplayMode(.inline) // Display the title inline
         .toolbar {
             ToolbarItem(placement: .principal) {
                 VStack(spacing: 2) {
-                    Text(place).font(.custom("Merriweather-var", size: 18).weight(.semibold))
+                    Text(place).font(.custom("Merriweather-var", size: 18).weight(.semibold)) // Place name
                     Text("\(totals.total) reports • \(PoliceAPI.humanMonth(monthISO))")
-                        .font(.custom("Merriweather-var", size: 18))
-                        .foregroundStyle(.secondary)
+                        .font(.custom("Merriweather-var", size: 18)) // Total reports and month
+                        .foregroundStyle(.secondary) // Secondary text style
                 }
             }
         }

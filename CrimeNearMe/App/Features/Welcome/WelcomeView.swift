@@ -106,7 +106,7 @@ struct WelcomeView: View {
                             .frame(height: 56)
                     }
                     .background(
-                        RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        RoundedRectangle(cornerRadius: 58, style: .continuous)
                             .fill(Brand.button)
                     )
                     .padding(.horizontal)

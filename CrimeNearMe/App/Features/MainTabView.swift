@@ -30,8 +30,9 @@ struct MainTabView_Previews: PreviewProvider {
 
 struct SummaryWithMapView: View {
     var body: some View {
-        VStack(spacing: 0) {
-            Divider()
+        VStack(spacing: -10) {
+            Divider() // Divider separates the map from the top content
+            // Top spacing of the map is implicitly set by the Divider above
             MapView(
                 anchor: CLLocationCoordinate2D(latitude: 53.4794, longitude: -2.2453),
                 totals: Totals(total: 16, serious: 3),

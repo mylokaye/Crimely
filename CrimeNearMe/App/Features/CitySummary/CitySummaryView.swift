@@ -134,10 +134,7 @@ struct CitySummaryView: View {
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
                     }
-                    .background(
-                        RoundedRectangle(cornerRadius: 28, style: .continuous)
-                            .fill(Brand.button)
-                    )
+                 
                     .padding(.horizontal)
                     .padding(.bottom, 22)
                 }

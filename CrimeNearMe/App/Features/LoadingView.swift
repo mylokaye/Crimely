@@ -166,12 +166,9 @@ struct CustomProgressViewStyle: ProgressViewStyle {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
                 // Background
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(Color.white.opacity(0.2))
-                    .frame(height: 4)
-                
+         
                 // Progress fill with shimmer effect
-                RoundedRectangle(cornerRadius: 2)
+                RoundedRectangle(cornerRadius: 50)
                     .fill(
                         LinearGradient(
                             colors: [
