@@ -10,6 +10,7 @@
 		246C8B212E64F7010001736A /* welcomepolice in Resources */ = {isa = PBXBuildFile; fileRef = 246C8B202E64F7010001736A /* welcomepolice */; };
 		246C8B232E64F7C70001736A /* Merriweather-var.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 246C8B222E64F7C70001736A /* Merriweather-var.ttf */; };
 		246C8B7B2E6569CA0001736A /* bg.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 246C8B7A2E6569CA0001736A /* bg.jpg */; };
+		2488E4882E6CBB21002A1036 /* MCP in Frameworks */ = {isa = PBXBuildFile; productRef = 2488E4872E6CBB21002A1036 /* MCP */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -87,6 +88,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2488E4882E6CBB21002A1036 /* MCP in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -151,6 +153,7 @@
 			);
 			name = CrimeNearMe;
 			packageProductDependencies = (
+				2488E4872E6CBB21002A1036 /* MCP */,
 			);
 			productName = CrimeNearMe;
 			productReference = 24D511D22E632FE400399179 /* CrimeNearMe.app */;
@@ -234,6 +237,9 @@
 			);
 			mainGroup = 24D511C92E632FE400399179;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				2488E4862E6CBB21002A1036 /* XCRemoteSwiftPackageReference "swift-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 24D511D32E632FE400399179 /* Products */;
 			projectDirPath = "";
@@ -324,6 +330,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CrimeNearMe/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Crimely;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to show police-reported crimes near you.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -365,6 +373,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CrimeNearMe/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Crimely;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to show police-reported crimes near you.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -638,6 +648,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2488E4862E6CBB21002A1036 /* XCRemoteSwiftPackageReference "swift-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/modelcontextprotocol/swift-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.10.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2488E4872E6CBB21002A1036 /* MCP */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2488E4862E6CBB21002A1036 /* XCRemoteSwiftPackageReference "swift-sdk" */;
+			productName = MCP;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 24D511CA2E632FE400399179 /* Project object */;
 }

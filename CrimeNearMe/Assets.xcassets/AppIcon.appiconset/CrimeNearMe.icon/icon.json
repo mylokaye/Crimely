@@ -1,21 +1,27 @@
 {
   "fill" : {
     "linear-gradient" : [
-      "display-p3:0.55686,0.59216,0.99216,1.00000",
-      "extended-srgb:0.38039,0.33333,0.96078,1.00000"
+      "display-p3:0.24072,0.24683,0.46338,1.00000",
+      "display-p3:0.75294,0.57422,0.75293,1.00000"
     ]
   },
   "groups" : [
     {
       "layers" : [
         {
-          "image-name" : "light.beacon.max@10x.png",
-          "name" : "light.beacon.max@10x",
+          "glass-specializations" : [
+            {
+              "appearance" : "light",
+              "value" : true
+            }
+          ],
+          "image-name" : "original-048e2beddd9b566279db17a4bc206b1d-2.png",
+          "name" : "original-048e2beddd9b566279db17a4bc206b1d-2",
           "position" : {
-            "scale" : 0.4,
+            "scale" : 1.77,
             "translation-in-points" : [
-              0,
-              0
+              -35.71875,
+              -25.7890625
             ]
           }
         }
@@ -31,9 +37,8 @@
     }
   ],
   "supported-platforms" : {
-    "circles" : [
-      "watchOS"
-    ],
-    "squares" : "shared"
+    "squares" : [
+      "iOS"
+    ]
   }
 }

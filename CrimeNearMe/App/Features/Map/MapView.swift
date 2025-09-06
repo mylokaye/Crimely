@@ -93,10 +93,20 @@ struct MapRepresentable: UIViewRepresentable {
                 view?.annotation = annotation
             }
 
-            if let symbolImage = UIImage(systemName: "shield.lefthalf.filled") {
+            // Prefer bundled PinkMarker, then PinMarker. Resize to 30x30 points for the annotation view
+            let targetSize = CGSize(width: 30, height: 30)
+            if let source = UIImage(named: "PinkMarker") ?? UIImage(named: "PinMarker") {
                 let rendererFormat = UIGraphicsImageRendererFormat.default()
                 rendererFormat.opaque = false
-                let targetSize = CGSize(width: 40, height: 40)
+                let img = UIGraphicsImageRenderer(size: targetSize, format: rendererFormat).image { _ in
+                    // Draw the source image into the target rect preserving its original rendering
+                    source.draw(in: CGRect(origin: .zero, size: targetSize))
+                }
+                view?.image = img
+            } else if let symbolImage = UIImage(systemName: "mappin.circle.fill") {
+                // Last-resort: rasterize SF Symbol to 30x30
+                let rendererFormat = UIGraphicsImageRendererFormat.default()
+                rendererFormat.opaque = false
                 let img = UIGraphicsImageRenderer(size: targetSize, format: rendererFormat).image { _ in
                     symbolImage.withTintColor(UIColor.systemBlue).draw(in: CGRect(origin: .zero, size: targetSize))
                 }
@@ -116,13 +126,29 @@ private struct AnchorDot: View {
                     .fill(Color.white.opacity(0.50))
                     .frame(width: 50, height: 50)
 
-                // Use SF Symbol with effects (iOS 18+ target)
-                Image(systemName: "shield.lefthalf.filled")
-                    .font(.title2)
-                    .scaleEffect(1.5)
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(.blue, .white)
-                    .symbolEffect(.pulse.byLayer, options: .repeat(.continuous))
+                // Use a bundled image asset named "PinkMarker" instead of an SF Symbol.
+                // Prefer PinkMarker; fall back to PinMarker, otherwise use an SF Symbol with effects.
+                Group {
+                    if UIImage(named: "PinkMarker") != nil {
+                        Image("PinkMarker")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 30, height: 30)
+                    } else if UIImage(named: "PinMarker") != nil {
+                        Image("PinMarker")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 30, height: 30)
+                    } else {
+                        Image(systemName: "shield.lefthalf.filled")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 30, height: 30)
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.pink, .white)
+                            .symbolEffect(.pulse.byLayer, options: .repeat(.continuous))
+                    }
+                }
             }
         }
         .accessibilityLabel(label)
