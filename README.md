@@ -1,10 +1,11 @@
-# CrimesNearMe
+# Crimely
+crimely.co.uk
 
 An iOS app that shows recent crime data in your local area, helping you stay informed about safety in your neighborhood.
 
 ## What it does
 
-CrimesNearMe is a location-based iOS application that:
+Crimely is a location-based iOS application that:
 
 - **Finds crimes near you**: Uses your current location to fetch and display recent crime reports in your area
 - **Shows crime statistics**: Provides a summary of total incidents and highlights serious crimes
