@@ -21,7 +21,7 @@ private enum Brand {
 }
 
 /// Welcome screen that handles user onboarding and location permission requests
-/// 
+///
 /// This view presents the initial app interface with brand messaging and guides
 /// users through location permission setup. It automatically fetches crime data
 /// once permission is granted and transitions to the city summary view.
@@ -171,7 +171,7 @@ struct WelcomeView: View {
     }
     
     /// Handles the main button tap action for location permission and data loading
-    /// 
+    ///
     /// This method orchestrates the complete onboarding flow:
     /// 1. Requests location permission from the user
     /// 2. Waits for coordinate response with timeout
@@ -185,7 +185,6 @@ struct WelcomeView: View {
         case .welcome:
             buttonEnabled = false
             isLoading = true
-            locationManager.request()
             
             // Wait up to ~3s for a coordinate, then clamp/fallback to Manchester
             var coord = locationManager.coordinate

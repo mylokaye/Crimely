@@ -23,6 +23,9 @@ struct MainTabView: View {
                     Label("Loading", systemImage: "info.circle")
                 }
         }
+        .onAppear {
+            locationManager.request()
+        }
     }
 }
 
