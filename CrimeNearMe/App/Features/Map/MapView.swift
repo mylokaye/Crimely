@@ -115,9 +115,9 @@ struct MapView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 VStack(spacing: 2) {
-                    Text(place).font(.custom("Merriweather-var", size: 18).weight(.semibold)) // Place name
+                    Text(place).font(.custom("Merriweather", size: 18).weight(.semibold)) // Place name
                     Text("\(totals.total) reports • \(PoliceAPI.humanMonth(monthISO))")
-                        .font(.custom("Merriweather-var", size: 18)) // Total reports and month
+                        .font(.custom("Merriweather", size: 18)) // Total reports and month
                         .foregroundStyle(.secondary) // Secondary text style
                 }
             }

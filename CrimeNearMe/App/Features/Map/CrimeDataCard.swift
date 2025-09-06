@@ -68,13 +68,13 @@ struct CrimeRowView: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {
                     Text(title) // Display the title of the crime category
-                        .font(.custom("Merriweather-var", size: 20).weight(.semibold))
+                        .font(.custom("Merriweather", size: 18).weight(.semibold))
                     Text("(\(count))") // Display the count of crimes in parentheses
-                        .font(.custom("Merriweather-var", size: 20).weight(.regular))
+                        .font(.custom("Merriweather", size: 16).weight(.regular))
                         .foregroundStyle(.secondary)
                 }
                 Text(subtitle) // Display the subtitle/description of the crime category
-                    .font(.custom("Merriweather-var", size: 17))
+                    .font(.custom("Merriweather", size: 14))
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -190,10 +190,11 @@ struct CrimeDataCard: View {
                     .padding(.top, CrimeDataCardStyle.grabberTopPaddingCollapsed) // Adjusts the top spacing for the collapsed state
                     .contentShape(Rectangle())
                 Text(place) // Display the name of the place
+                    // Change the font for the place name here
                 
+                    .font(.custom("Merriweather", size: 18).weight(.semibold))
+
                 
-                
-                    .font(.system(size: 18))
                          .fontWeight(.regular)
                          .foregroundStyle(.primary)
                          .lineLimit(1)

@@ -17,6 +17,11 @@ struct MainTabView: View {
             .tabItem {
                 Label("Info", systemImage: "info.circle")
             }
+            
+            LoadingView()
+                .tabItem {
+                    Label("Loading", systemImage: "info.circle")
+                }
         }
     }
 }

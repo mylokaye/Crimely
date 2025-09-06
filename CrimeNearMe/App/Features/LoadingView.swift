@@ -13,14 +13,8 @@ import SwiftUI
 /// pulsing dots, and gradient backgrounds. It cycles through various status messages
 /// to give users feedback about the data loading process.
 struct LoadingView: View {
-    /// Current index in the messages array for text animation
-    @State private var currentIndex = 0
-    
     /// Progress value for potential progress bar (currently unused)
     @State private var progress: Double = 0
-    
-    /// Controls the dot loading animation state
-    @State private var dotAnimation = false
     
     /// Controls the shield icon pulse animation
     @State private var shieldPulse = false
@@ -29,13 +23,11 @@ struct LoadingView: View {
     
     /// Array of status messages shown during loading
     private let messages = [
-        "Querying regional crime reports",
-        "Matching reported incidents",
-        "Checking recent reported crimes",
-        "Calculating area safety index",
-        "Eliminating duplicate incidents",
-        "Combining police safety datasets",
-        "Encrypting requests over police API"
+        
+        "Accessing police API",
+        "Querying reports",
+        "Matching incidents",
+        "Combining datasets",
     ]
     
     var body: some View {
@@ -43,14 +35,17 @@ struct LoadingView: View {
             // Gradient background with slow hue cycling (iOS 18+)
             LinearGradient(
                 colors: [
-                    Color(hex: "2D4A8B"),
-                    Color(hex: "4A6BAE"),
-                    Color(hex: "6B7ED6"),
-                    Color(hex: "8E97FD"),
-                    Color(hex: "B57FDD"),
-                    Color(hex: "E291AA"),
-                    Color(hex: "FF9A9E")
-                ],
+                    Color(hex: "2B326A"),
+                           Color(hex: "393C75"),
+                           Color(hex: "494983"),
+                           Color(hex: "5C5792"),
+                           Color(hex: "7066A3"),
+                           Color(hex: "8575B1"),
+                           Color(hex: "9981BA"),
+                           Color(hex: "AA8BBE"),
+                           Color(hex: "B690B9"),
+                           Color(hex: "C496B2"),
+                       ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -64,37 +59,45 @@ struct LoadingView: View {
             VStack(spacing: 40) {
                 Spacer()
                 
-                // MARK: - Animated Status Messages
-                VStack(spacing: 30) {
-                    Text(messages[currentIndex])
-                        .multilineTextAlignment(.center)
-                        .font(.custom("Merriweather-var", size: 20).weight(.semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 24)
-                        .frame(width: 320, height: 100)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .lineLimit(3)
-                        .transition(
-                            .asymmetric(
-                                insertion: .scale(scale: 0.95).combined(with: .opacity).combined(with: .blur(radius: 2)),
-                                removal: .scale(scale: 1.05).combined(with: .opacity).combined(with: .blur(radius: 2))
-                            )
-                        )
-                    
-                    // MARK: - Animated Loading Dots
-                    HStack(spacing: 12) {
-                        ForEach(0..<3, id: \.self) { index in
-                            Circle()
-                                .fill(Color.white.opacity(0.9))
-                                .frame(width: 10, height: 10)
-                                .scaleEffect(dotAnimation ? 1.4 : 0.6)
-                                .opacity(dotAnimation ? 1.0 : 0.3)
-                                .animation(
-                                    Animation.spring(response: 0.4, dampingFraction: 0.6)
-                                        .repeatForever()
-                                        .delay(Double(index) * 0.15),
-                                    value: dotAnimation
-                                )
+                // MARK: - Animated Status + Dots (synced)
+                TimelineView(.animation) { timeline in
+                    let now = timeline.date.timeIntervalSinceReferenceDate
+
+                    // Choose a single clock: dots loop and text advance are synchronized
+                    let dotPeriod: Double = 2.0                 // seconds for one full breath cycle
+                    let messagePeriod: Double = dotPeriod * 1   // change text every 3 dot cycles (gentle)
+
+                    // Active message index based on time
+                    let messageIndex = (Int(floor(now / messagePeriod)) % max(messages.count, 1))
+
+                    VStack(spacing: 10) {
+                        // Active message (single sentence only)
+                        Text(messages.isEmpty ? "" : messages[messageIndex])
+                            .id(messageIndex)
+                            .multilineTextAlignment(.center)
+                            .font(.custom("Merriweather", size: 20))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 0)
+                            .frame(width: 320, height: 100)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .lineLimit(3)
+
+                        // Animated Loading Dots (same clock)
+                        HStack(spacing: 12) {
+                            ForEach(0..<3, id: \.self) { index in
+                                // Each dot offset by 1/3 of the cycle
+                                let t = (now / dotPeriod + Double(index) / 3.0).truncatingRemainder(dividingBy: 1.0)
+                                let v = 0.5 * (1 - cos(2 * .pi * t))  // smooth 0→1→0
+
+                                Circle()
+                                    .fill(Color.white.opacity(0.9))
+                                    .frame(width: 10, height: 10)
+                                    .overlay(
+                                        Circle().stroke(Color.white.opacity(0.35), lineWidth: 1)
+                                    )
+                                    .scaleEffect(0.9 + 0.3 * v)
+                                    .opacity(0.25 + 0.75 * v)
+                            }
                         }
                     }
                 }
@@ -103,76 +106,76 @@ struct LoadingView: View {
             }
             
             // Shield icon in top right
-            VStack {
-                HStack {
-                    Spacer()
-                    
-                    Button(action: {}) {
-
-                        ZStack {
-                            // Liquid Glass circle
-                            Circle()
-                                .fill(.ultraThinMaterial)
-                                .overlay(
-                                    // glass rim
-                                    Circle().strokeBorder(
-                                        LinearGradient(
-                                            colors: [Color.white.opacity(0.7),
-                                                     Color.white.opacity(0.15),
-                                                     Color.white.opacity(0.7)],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        ),
-                                        lineWidth: 1
-                                    )
-                                )
-                                .background(
-                                    // subtle inner glow
-                                    Circle().fill(
-                                        RadialGradient(
-                                            colors: [Color.white.opacity(0.18),
-                                                     Color.white.opacity(0.05),
-                                                     .clear],
-                                            center: .topLeading,
-                                            startRadius: 0,
-                                            endRadius: 120
-                                        )
-                                    )
-                                )
-                                .overlay(
-                                    // inner shadow for depth
-                                    Circle()
-                                        .strokeBorder(Color.black.opacity(0.25), lineWidth: 1)
-                                        .blur(radius: 2)
-                                        .offset(y: 1)
-                                        .mask(Circle())
-                                )
-                                .overlay(
-                                    // moving highlight
-                                    Circle()
-                                        .trim(from: 0.0, to: 0.55)
-                                        .stroke(Color.white.opacity(0.45), style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                                        .rotationEffect(.degrees(shieldPulse ? -18 : 12))
-                                        .blur(radius: 2)
-                                        .animation(.easeInOut(duration: 2.6).repeatForever(autoreverses: true), value: shieldPulse)
-                                )
-                                .frame(width: 50, height: 50)
-                                .scaleEffect(shieldPulse ? 1.05 : 1.0)
-                                .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 6)
-
-                            Image(systemName: "shield.checkered")
-                                .font(.title2)
-                                .symbolRenderingMode(.hierarchical)
-                                .foregroundStyle(.white)
-                                .shadow(color: .black.opacity(0.25), radius: 2, x: 0, y: 1)
-                        }
-                    }
-                    .padding(.trailing, 24)
-                }
-                .padding(.top, 20)
-                
-                Spacer()
-            }
+//            VStack {
+//                HStack {
+//                    Spacer()
+//
+//                    Button(action: {}) {
+//
+//                        ZStack {
+//                            // Liquid Glass circle
+//                            Circle()
+//                                .fill(.ultraThinMaterial)
+//                                .overlay(
+//                                    // glass rim
+//                                    Circle().strokeBorder(
+//                                        LinearGradient(
+//                                            colors: [Color.white.opacity(0.7),
+//                                                     Color.white.opacity(0.15),
+//                                                     Color.white.opacity(0.7)],
+//                                            startPoint: .topLeading,
+//                                            endPoint: .bottomTrailing
+//                                        ),
+//                                        lineWidth: 1
+//                                    )
+//                                )
+//                                .background(
+//                                    // subtle inner glow
+//                                    Circle().fill(
+//                                        RadialGradient(
+//                                            colors: [Color.white.opacity(0.18),
+//                                                     Color.white.opacity(0.05),
+//                                                     .clear],
+//                                            center: .topLeading,
+//                                            startRadius: 0,
+//                                            endRadius: 120
+//                                        )
+//                                    )
+//                                )
+//                                .overlay(
+//                                    // inner shadow for depth
+//                                    Circle()
+//                                        .strokeBorder(Color.black.opacity(0.25), lineWidth: 1)
+//                                        .blur(radius: 2)
+//                                        .offset(y: 1)
+//                                        .mask(Circle())
+//                                )
+//                                .overlay(
+//                                    // moving highlight
+//                                    Circle()
+//                                        .trim(from: 0.0, to: 0.55)
+//                                        .stroke(Color.white.opacity(0.45), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+//                                        .rotationEffect(.degrees(shieldPulse ? -18 : 12))
+//                                        .blur(radius: 2)
+//                                        .animation(.easeInOut(duration: 2.6).repeatForever(autoreverses: true), value: shieldPulse)
+//                                )
+//                                .frame(width: 50, height: 50)
+//                                .scaleEffect(shieldPulse ? 1.05 : 1.0)
+//                                .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 6)
+//
+//                            Image(systemName: "shield.checkered")
+//                                .font(.title2)
+//                                .symbolRenderingMode(.hierarchical)
+//                                .foregroundStyle(.white)
+//                                .shadow(color: .black.opacity(0.25), radius: 2, x: 0, y: 1)
+//                        }
+//                    }
+//                    .padding(.trailing, 24)
+//                }
+//                .padding(.top, 20)
+//
+//                Spacer()
+//            }
         }
         .onAppear {
             startAnimations()
@@ -188,22 +191,8 @@ struct LoadingView: View {
     /// 2. Dot loading animation with spring effects
     /// 3. Shield pulse animation for visual interest
     private func startAnimations() {
-        // Cycle through status messages with smooth spring transitions
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.3)) {
-                currentIndex = (currentIndex + 1) % messages.count
-            }
-        }
-        
-        // Start dot animation with slight delay for smoothness
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            dotAnimation = true
-        }
-        
-        // Start shield pulse animation with additional delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            shieldPulse = true
-        }
+        // Only kick the shield pulse; messages and dots are phase-driven
+        shieldPulse = true
     }
 }
 
