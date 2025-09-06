@@ -8,7 +8,7 @@
 import CoreLocation
 
 /// Actor-based service for resolving coordinates to human-readable place names
-/// 
+///
 /// This service uses Core Location's reverse geocoding to convert coordinates
 /// into user-friendly place names for display in the UI. It's implemented as
 /// an actor to handle concurrent geocoding requests safely.
@@ -20,11 +20,11 @@ actor PlaceResolver {
     private let geocoder = CLGeocoder()
 
     /// Resolves a coordinate to a human-readable place name
-    /// 
+    ///
     /// Attempts reverse geocoding to find the locality, administrative area,
     /// or other geographic identifiers. Falls back to "Manchester" if geocoding
     /// fails or returns no usable results.
-    /// 
+    ///
     /// - Parameter coord: The coordinate to resolve
     /// - Returns: Human-readable place name (e.g., "Manchester", "City Centre")
     func resolvePlaceName(for coord: CLLocationCoordinate2D) async -> String {
@@ -34,7 +34,7 @@ actor PlaceResolver {
                 // Try locality first, then fall back to administrative areas
                 return p.locality ?? p.subAdministrativeArea ?? p.administrativeArea ?? "Manchester"
             }
-        } catch { 
+        } catch {
             // Geocoding failed - network issues, rate limiting, or invalid coordinates
         }
         return "Manchester"

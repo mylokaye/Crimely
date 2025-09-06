@@ -212,9 +212,13 @@ struct CrimeDataCard: View {
         .background(
             ZStack {
                 if CrimeDataCardStyle.useCapsuleBackground {
-                    Capsule()
-                        .fill(isExpanded ? CrimeDataCardStyle.expandedBackgroundColor : CrimeDataCardStyle.collapsedBackgroundColor)
-                        .glassEffect(.regular.interactive())
+                    if #available(iOS 26.0, *) {
+                        Capsule()
+                            .fill(isExpanded ? CrimeDataCardStyle.expandedBackgroundColor : CrimeDataCardStyle.collapsedBackgroundColor)
+                            .glassEffect(.regular.interactive())
+                    } else {
+                        // Fallback on earlier versions
+                    }
                 } else {
                     RoundedRectangle(
                         cornerRadius: isExpanded ? CrimeDataCardStyle.expandedCornerRadius : CrimeDataCardStyle.collapsedCornerRadius,
