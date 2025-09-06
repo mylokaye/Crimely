@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// Loading screen displayed while fetching crime data from the API
-/// 
+///
 /// This view provides an engaging loading experience with animated text messages,
 /// pulsing dots, and gradient backgrounds. It cycles through various status messages
 /// to give users feedback about the data loading process.
@@ -25,10 +25,12 @@ struct LoadingView: View {
     /// Controls the shield icon pulse animation
     @State private var shieldPulse = false
     
+    
+    
     /// Array of status messages shown during loading
     private let messages = [
         "Querying regional crime reports",
-        "Matching reported incidents", 
+        "Matching reported incidents",
         "Checking recent reported crimes",
         "Calculating area safety index",
         "Eliminating duplicate incidents",
@@ -38,7 +40,7 @@ struct LoadingView: View {
     
     var body: some View {
         ZStack {
-            // Gradient background
+            // Gradient background with slow hue cycling (iOS 18+)
             LinearGradient(
                 colors: [
                     Color(hex: "2D4A8B"),
@@ -52,6 +54,11 @@ struct LoadingView: View {
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
+            .phaseAnimator([0.0, 1.0]) { content, phase in
+                content.hueRotation(.degrees(phase * 360))
+            } animation: { _ in
+                .linear(duration: 30).repeatForever(autoreverses: false)
+            }
             .ignoresSafeArea()
             
             VStack(spacing: 40) {
@@ -101,24 +108,63 @@ struct LoadingView: View {
                     Spacer()
                     
                     Button(action: {}) {
+
                         ZStack {
+                            // Liquid Glass circle
                             Circle()
-                                .fill(Color(hex: "2D4A8B").opacity(0.15))
-                                .frame(width: 50, height: 50)
+                                .fill(.ultraThinMaterial)
                                 .overlay(
+                                    // glass rim
+                                    Circle().strokeBorder(
+                                        LinearGradient(
+                                            colors: [Color.white.opacity(0.7),
+                                                     Color.white.opacity(0.15),
+                                                     Color.white.opacity(0.7)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
+                                )
+                                .background(
+                                    // subtle inner glow
+                                    Circle().fill(
+                                        RadialGradient(
+                                            colors: [Color.white.opacity(0.18),
+                                                     Color.white.opacity(0.05),
+                                                     .clear],
+                                            center: .topLeading,
+                                            startRadius: 0,
+                                            endRadius: 120
+                                        )
+                                    )
+                                )
+                                .overlay(
+                                    // inner shadow for depth
                                     Circle()
-                                        .stroke(Color(hex: "2D4A8B").opacity(0.2), lineWidth: 1)
+                                        .strokeBorder(Color.black.opacity(0.25), lineWidth: 1)
+                                        .blur(radius: 2)
+                                        .offset(y: 1)
+                                        .mask(Circle())
                                 )
+                                .overlay(
+                                    // moving highlight
+                                    Circle()
+                                        .trim(from: 0.0, to: 0.55)
+                                        .stroke(Color.white.opacity(0.45), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                                        .rotationEffect(.degrees(shieldPulse ? -18 : 12))
+                                        .blur(radius: 2)
+                                        .animation(.easeInOut(duration: 2.6).repeatForever(autoreverses: true), value: shieldPulse)
+                                )
+                                .frame(width: 50, height: 50)
                                 .scaleEffect(shieldPulse ? 1.05 : 1.0)
-                                .animation(
-                                    Animation.spring(response: 3.0, dampingFraction: 0.8)
-                                        .repeatForever(autoreverses: true),
-                                    value: shieldPulse
-                                )
-                            
+                                .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 6)
+
                             Image(systemName: "shield.checkered")
                                 .font(.title2)
-                                .foregroundColor(Color(hex: "2D4A8B"))
+                                .symbolRenderingMode(.hierarchical)
+                                .foregroundStyle(.white)
+                                .shadow(color: .black.opacity(0.25), radius: 2, x: 0, y: 1)
                         }
                     }
                     .padding(.trailing, 24)
@@ -133,8 +179,10 @@ struct LoadingView: View {
         }
     }
     
+    ///
+    
     /// Initializes all animations when the view appears
-    /// 
+    ///
     /// Starts three types of animations with staggered timing:
     /// 1. Text message cycling every 2 seconds
     /// 2. Dot loading animation with spring effects
