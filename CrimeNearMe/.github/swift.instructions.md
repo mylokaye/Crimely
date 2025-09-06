@@ -8,7 +8,7 @@ These instructions define how GitHub Copilot should assist with this project. Th
 - **Language**: Swift
 - **Framework / Libraries**: SwiftUI / UIKit 
 - **Architecture**: MVVM / Clean Architecture
-- **Minimum iOS version: iOS 17
+- **Minimum iOS version: iOS 18+
 - **
 - **
 

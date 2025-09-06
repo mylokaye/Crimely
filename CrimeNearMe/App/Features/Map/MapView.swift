@@ -6,69 +6,106 @@
 import SwiftUI
 import MapKit
 import CoreLocation
+import UIKit
 
 // -----------------------------
 // MapKit feature toggles (edit here)
+// Minimum iOS version: iOS 18+
 // -----------------------------
-// This section provides easy-to-edit flags and guidance so you can turn
-// common MapKit features on/off. SwiftUI's Map offers high-level style
-// controls (mapStyle). For lower-level features (traffic, individual
-// POI categories, road visibility) you will need to use an MKMapView
-// wrapper (see commented example below).
+// With iOS 18+ we assume modern MapKit APIs are present. Toggle these flags
+// to control Map style and fine-grained features. Hiding POIs uses
+// MKMapView.preferredConfiguration (MKStandardMapConfiguration) which is
+// available on the targeted runtime.
 
 private enum MapFeatureFlags {
     // High-level SwiftUI Map style. Change to: .standard, .mutedStandard, .satellite, .hybrid
     static let mapStyle: MapStyle = .standard
 
-    // Fine-grained features (require MKMapView via UIViewRepresentable):
-    // - showsTraffic: overlays traffic information
-    // - showPointsOfInterest: show/hide POI symbols (restaurants, shops, transit, etc.)
-    // - showsBuildings: 3D building extrusion
-    // Note: these flags are informational here; to apply them, swap the SwiftUI Map
-    // for the commented MKMapViewRepresentable below and wire these booleans in.
+    // Fine-grained features (applied via MKMapView wrapper):
     static let showsTraffic = false
-    static let showPointsOfInterest = true
-    static let showsBuildings = true
+    static let showPointsOfInterest = false // set false to hide POIs
+    static let showsBuildings = false
 }
 
-// Example MKMapView wrapper for advanced feature control (commented out).
-// To use it: 1) Uncomment the struct below and 2) replace the SwiftUI Map in
-// the MapView body with MapRepresentable(...flags...). The example demonstrates
-// toggling traffic, building display, and POI filters.
-/*
-import UIKit
-
+// MKMapView wrapper for advanced feature control.
 struct MapRepresentable: UIViewRepresentable {
     let center: CLLocationCoordinate2D
     let showsTraffic: Bool
     let showPOI: Bool
     let showsBuildings: Bool
 
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView(frame: .zero)
+        mapView.delegate = context.coordinator
         mapView.mapType = .standard
         mapView.showsTraffic = showsTraffic
         mapView.showsBuildings = showsBuildings
 
-        // Control point-of-interest visibility (iOS 13+)
-        if #available(iOS 13.0, *) {
-            mapView.pointOfInterestFilter = showPOI ? .includingAll : .excludingAll
-        }
+        // Use preferredConfiguration directly (iOS 18+ target)
+        var config = MKStandardMapConfiguration(elevationStyle: .flat)
+        config.pointOfInterestFilter = showPOI ? .includingAll : .excludingAll
+        mapView.preferredConfiguration = config
 
+        // Add a single annotation for the anchor
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = center
+        mapView.addAnnotation(annotation)
+
+        let region = MKCoordinateRegion(center: center, latitudinalMeters: Defaults.defaultRadiusMeters * 2, longitudinalMeters: Defaults.defaultRadiusMeters * 2)
+        mapView.setRegion(region, animated: false)
         return mapView
     }
 
     func updateUIView(_ uiView: MKMapView, context: Context) {
-        let region = MKCoordinateRegion(center: center, latitudinalMeters: Defaults.defaultRadiusMeters * 2, longitudinalMeters: Defaults.defaultRadiusMeters * 2)
-        uiView.setRegion(region, animated: true)
         uiView.showsTraffic = showsTraffic
         uiView.showsBuildings = showsBuildings
-        if #available(iOS 13.0, *) {
-            uiView.pointOfInterestFilter = showPOI ? .includingAll : .excludingAll
+
+        var config = MKStandardMapConfiguration(elevationStyle: .flat)
+        config.pointOfInterestFilter = showPOI ? .includingAll : .excludingAll
+        uiView.preferredConfiguration = config
+
+        if let annotation = uiView.annotations.first as? MKPointAnnotation {
+            annotation.coordinate = center
+        } else {
+            let annotation = MKPointAnnotation()
+            annotation.coordinate = center
+            uiView.addAnnotation(annotation)
+        }
+
+        let region = MKCoordinateRegion(center: center, latitudinalMeters: Defaults.defaultRadiusMeters * 2, longitudinalMeters: Defaults.defaultRadiusMeters * 2)
+        uiView.setRegion(region, animated: true)
+    }
+
+    class Coordinator: NSObject, MKMapViewDelegate {
+        let parent: MapRepresentable
+        init(_ parent: MapRepresentable) { self.parent = parent }
+
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            if annotation is MKUserLocation { return nil }
+            let id = "Anchor"
+            var view = mapView.dequeueReusableAnnotationView(withIdentifier: id)
+            if view == nil {
+                view = MKAnnotationView(annotation: annotation, reuseIdentifier: id)
+                view?.canShowCallout = false
+            } else {
+                view?.annotation = annotation
+            }
+
+            if let symbolImage = UIImage(systemName: "shield.lefthalf.filled") {
+                let rendererFormat = UIGraphicsImageRendererFormat.default()
+                rendererFormat.opaque = false
+                let targetSize = CGSize(width: 40, height: 40)
+                let img = UIGraphicsImageRenderer(size: targetSize, format: rendererFormat).image { _ in
+                    symbolImage.withTintColor(UIColor.systemBlue).draw(in: CGRect(origin: .zero, size: targetSize))
+                }
+                view?.image = img
+            }
+            return view
         }
     }
 }
-*/
 
 private struct AnchorDot: View {
     let label: String
@@ -76,56 +113,22 @@ private struct AnchorDot: View {
         VStack(spacing: 4) {
             ZStack {
                 Circle()
-                    .fill(Color.white.opacity(0.0))
-                    .frame(width: 50, height: 50) // increased 50% from 50
+                    .fill(Color.white.opacity(0.50))
+                    .frame(width: 50, height: 50)
 
-                // Use mappin.circle.fill and apply a pulsing symbol effect on iOS 17+.
-                if #available(iOS 17.0, *) {
-                    Image(systemName: "mappin.and.ellipse.circle.fill")
-                        .font(.title2)
-                        .scaleEffect(1.5) // increase image size by 50%
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(.blue, .white)
-                } else {
-                    Image(systemName: "mappin.circle.fill")
-                        .font(.title2)
-                        .scaleEffect(1.5)
-                        .foregroundStyle(.blue, .white)
-                }
+                // Use SF Symbol with effects (iOS 18+ target)
+                Image(systemName: "shield.lefthalf.filled")
+                    .font(.title2)
+                    .scaleEffect(1.5)
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.blue, .white)
+                    .symbolEffect(.pulse.byLayer, options: .repeat(.continuous))
             }
-            // Removed the visible place name text here per request.
-            // Previously: Text(label).font(.custom("Merriweather", size: 18))
         }
         .accessibilityLabel(label)
     }
 }
 
-/*
-// // Pull-over resting state view (UIKit recreation in SwiftUI)
-struct PullOverRestingView: View {
-    var body: some View {
-        ZStack(alignment: .top) {
-            if #available(iOS 17.0, *) {
-                RoundedRectangle(cornerRadius: 0, style: .continuous)
-                    .fill(.ultraThinMaterial) // Provides a translucent material effect
-                    .frame(height: 9) // Height of the main rounded rectangle
-                    .frame(maxWidth: .infinity) // Makes it span the full width
-                    .glassEffect(.regular) // Adds a glass-like effect (iOS 17+ only)
-            } else {
-                RoundedRectangle(cornerRadius: 0, style: .continuous)
-                    .fill(.ultraThinMaterial) // Provides a translucent material effect
-                    .frame(height: 9) // Height of the main rounded rectangle
-                    .frame(maxWidth: .infinity) // Makes it span the full width
-            }
-            Rectangle()
-                .fill(Color.black.opacity(0.01)) // Thin black line with slight transparency
-                .frame(height: 0.5) // Height of the thin line
-                .frame(maxWidth: .infinity) // Makes it span the full width
-        }
-        .frame(height: 19) // Total height of the pull-over resting view
-    }
-}
- */
 struct MapView: View {
     let anchor: CLLocationCoordinate2D // The center coordinate for the map
     let totals: Totals // Total crime data to display
@@ -134,7 +137,6 @@ struct MapView: View {
     let byCategory: [CategoryCount] // Crime data grouped by category
 
     @State private var position: MapCameraPosition // The camera position for the map
-    @State private var legacyRegion: MKCoordinateRegion // Fallback region for older iOS versions
 
     @StateObject private var locationManager = LocationManager() // Location manager to track user location
 
@@ -160,21 +162,29 @@ struct MapView: View {
             longitudinalMeters: Defaults.defaultRadiusMeters * 2 // Longitude span for the map region
         )
         _position = State(initialValue: .region(region)) // Initialize the camera position
-        _legacyRegion = State(initialValue: region) // Initialize the fallback region
     }
 
     var body: some View {
         ZStack {
             // Map
             Group {
-                if #available(iOS 17.0, *) {
+                // Determine the annotation coordinate once
+                let annotationCoordinate = locationManager.coordinate ?? anchor
+
+                // If POIs are disabled in the flags, use the MapRepresentable wrapper
+                // which applies MKMapView.preferredConfiguration to exclude POIs.
+                if MapFeatureFlags.showPointsOfInterest == false {
+                    MapRepresentable(
+                        center: annotationCoordinate,
+                        showsTraffic: MapFeatureFlags.showsTraffic,
+                        showPOI: MapFeatureFlags.showPointsOfInterest,
+                        showsBuildings: MapFeatureFlags.showsBuildings
+                    )
+                } else {
+                    // Use SwiftUI Map unconditionally (iOS 18+ target)
                     Map(position: $position) {
-                        let annotationCoordinate = locationManager.coordinate ?? anchor
                         // Provide the label to the custom AnchorDot but keep the system annotation title empty
                         let annotationLabel = place
-
-                        // Use the custom AnchorDot for the visible label (Merriweather, size 18).
-                        // Pass an empty system label to Annotation so the map doesn't draw a second label.
 
                         Annotation("", coordinate: annotationCoordinate) {
                             AnchorDot(label: annotationLabel)
@@ -183,41 +193,24 @@ struct MapView: View {
                     .mapStyle(MapFeatureFlags.mapStyle) // Use configured map style flag
                     .onAppear {
                         if let userLocation = locationManager.coordinate {
-                            print("[DEBUG] User location onAppear: \(userLocation)")
                             let userRegion = MKCoordinateRegion(
                                 center: userLocation,
                                 latitudinalMeters: Defaults.defaultRadiusMeters * 2,
                                 longitudinalMeters: Defaults.defaultRadiusMeters * 2
                             )
                             position = .region(userRegion)
-                        } else {
-                            print("[DEBUG] No user location available onAppear")
                         }
                     }
                     .onChange(of: locationManager.coordinate) { _, newLocation in
                         if let newLocation = newLocation {
-                            print("[DEBUG] User location updated: \(newLocation)")
                             let userRegion = MKCoordinateRegion(
                                 center: newLocation,
                                 latitudinalMeters: Defaults.defaultRadiusMeters * 2,
                                 longitudinalMeters: Defaults.defaultRadiusMeters * 2
                             )
                             position = .region(userRegion)
-                        } else {
-                            print("[DEBUG] User location update received but is nil")
                         }
                     }
-                } else {
-                    Map(coordinateRegion: $legacyRegion) // Fallback map for older iOS versions
-                        .onAppear {
-                            if let userLocation = locationManager.coordinate {
-                                legacyRegion = MKCoordinateRegion(
-                                    center: userLocation,
-                                    latitudinalMeters: Defaults.defaultRadiusMeters * 2,
-                                    longitudinalMeters: Defaults.defaultRadiusMeters * 2
-                                )
-                            }
-                        }
                 }
             }
             // Bottom card overlay
