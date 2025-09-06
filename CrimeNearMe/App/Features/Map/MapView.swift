@@ -7,17 +7,99 @@ import SwiftUI
 import MapKit
 import CoreLocation
 
-// Lightweight anchor marker
+// -----------------------------
+// MapKit feature toggles (edit here)
+// -----------------------------
+// This section provides easy-to-edit flags and guidance so you can turn
+// common MapKit features on/off. SwiftUI's Map offers high-level style
+// controls (mapStyle). For lower-level features (traffic, individual
+// POI categories, road visibility) you will need to use an MKMapView
+// wrapper (see commented example below).
+
+private enum MapFeatureFlags {
+    // High-level SwiftUI Map style. Change to: .standard, .mutedStandard, .satellite, .hybrid
+    static let mapStyle: MapStyle = .standard
+
+    // Fine-grained features (require MKMapView via UIViewRepresentable):
+    // - showsTraffic: overlays traffic information
+    // - showPointsOfInterest: show/hide POI symbols (restaurants, shops, transit, etc.)
+    // - showsBuildings: 3D building extrusion
+    // Note: these flags are informational here; to apply them, swap the SwiftUI Map
+    // for the commented MKMapViewRepresentable below and wire these booleans in.
+    static let showsTraffic = false
+    static let showPointsOfInterest = true
+    static let showsBuildings = true
+}
+
+// Example MKMapView wrapper for advanced feature control (commented out).
+// To use it: 1) Uncomment the struct below and 2) replace the SwiftUI Map in
+// the MapView body with MapRepresentable(...flags...). The example demonstrates
+// toggling traffic, building display, and POI filters.
+/*
+import UIKit
+
+struct MapRepresentable: UIViewRepresentable {
+    let center: CLLocationCoordinate2D
+    let showsTraffic: Bool
+    let showPOI: Bool
+    let showsBuildings: Bool
+
+    func makeUIView(context: Context) -> MKMapView {
+        let mapView = MKMapView(frame: .zero)
+        mapView.mapType = .standard
+        mapView.showsTraffic = showsTraffic
+        mapView.showsBuildings = showsBuildings
+
+        // Control point-of-interest visibility (iOS 13+)
+        if #available(iOS 13.0, *) {
+            mapView.pointOfInterestFilter = showPOI ? .includingAll : .excludingAll
+        }
+
+        return mapView
+    }
+
+    func updateUIView(_ uiView: MKMapView, context: Context) {
+        let region = MKCoordinateRegion(center: center, latitudinalMeters: Defaults.defaultRadiusMeters * 2, longitudinalMeters: Defaults.defaultRadiusMeters * 2)
+        uiView.setRegion(region, animated: true)
+        uiView.showsTraffic = showsTraffic
+        uiView.showsBuildings = showsBuildings
+        if #available(iOS 13.0, *) {
+            uiView.pointOfInterestFilter = showPOI ? .includingAll : .excludingAll
+        }
+    }
+}
+*/
+
 private struct AnchorDot: View {
     let label: String
     var body: some View {
-        ZStack {
-            Circle().fill(Color.blue.opacity(0.20)).frame(width: 28, height: 28)
-            Image(systemName: "mappin.circle.fill").font(.title2).foregroundStyle(.red, .white)
+        VStack(spacing: 4) {
+            ZStack {
+                Circle()
+                    .fill(Color.white.opacity(0.0))
+                    .frame(width: 50, height: 50) // increased 50% from 50
+
+                // Use mappin.circle.fill and apply a pulsing symbol effect on iOS 17+.
+                if #available(iOS 17.0, *) {
+                    Image(systemName: "mappin.and.ellipse.circle.fill")
+                        .font(.title2)
+                        .scaleEffect(1.5) // increase image size by 50%
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.blue, .white)
+                } else {
+                    Image(systemName: "mappin.circle.fill")
+                        .font(.title2)
+                        .scaleEffect(1.5)
+                        .foregroundStyle(.blue, .white)
+                }
+            }
+            // Removed the visible place name text here per request.
+            // Previously: Text(label).font(.custom("Merriweather", size: 18))
         }
         .accessibilityLabel(label)
     }
 }
+
 /*
 // // Pull-over resting state view (UIKit recreation in SwiftUI)
 struct PullOverRestingView: View {
@@ -88,13 +170,17 @@ struct MapView: View {
                 if #available(iOS 17.0, *) {
                     Map(position: $position) {
                         let annotationCoordinate = locationManager.coordinate ?? anchor
-                        let annotationLabel = locationManager.coordinate != nil ? "Your Location" : place
+                        // Provide the label to the custom AnchorDot but keep the system annotation title empty
+                        let annotationLabel = place
 
-                        Annotation(annotationLabel, coordinate: annotationCoordinate) {
+                        // Use the custom AnchorDot for the visible label (Merriweather, size 18).
+                        // Pass an empty system label to Annotation so the map doesn't draw a second label.
+
+                        Annotation("", coordinate: annotationCoordinate) {
                             AnchorDot(label: annotationLabel)
                         }
                     }
-                    .mapStyle(.standard) // Standard map style
+                    .mapStyle(MapFeatureFlags.mapStyle) // Use configured map style flag
                     .onAppear {
                         if let userLocation = locationManager.coordinate {
                             print("[DEBUG] User location onAppear: \(userLocation)")
@@ -108,7 +194,7 @@ struct MapView: View {
                             print("[DEBUG] No user location available onAppear")
                         }
                     }
-                    .onChange(of: locationManager.coordinate) { newLocation in
+                    .onChange(of: locationManager.coordinate) { _, newLocation in
                         if let newLocation = newLocation {
                             print("[DEBUG] User location updated: \(newLocation)")
                             let userRegion = MKCoordinateRegion(
