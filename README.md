@@ -1,5 +1,5 @@
 # Crimely
-#crimely.co.uk
+crimely.co.uk
 
 An iOS app that shows recent crime data in your local area, helping you stay informed about safety in your neighborhood.
 
