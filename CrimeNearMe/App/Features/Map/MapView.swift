@@ -7,6 +7,7 @@ import SwiftUI
 import MapKit
 import CoreLocation
 import UIKit
+import Combine
 
 // -----------------------------
 // MapKit feature toggles (edit here)
@@ -156,6 +157,8 @@ private struct AnchorDot: View {
 }
 
 struct MapView: View {
+    @State private var crimeList: [Crime] = []
+    @State private var cancellables = Set<AnyCancellable>()
     let anchor: CLLocationCoordinate2D // The center coordinate for the map
     let totals: Totals // Total crime data to display
     let monthISO: String // The month in ISO format (e.g., "2025-06")
@@ -269,6 +272,26 @@ struct MapView: View {
                         .font(.custom("Merriweather", size: 18)) // Total reports and month
                         .foregroundStyle(.secondary) // Secondary text style
                 }
+            }
+        }
+        .onAppear {
+            fetchCrimeData()
+        }
+    }
+
+    private func fetchCrimeData() {
+        Task {
+            do {
+                let (months, crimes) = try await PoliceAPI.shared.crimesLastMonths(
+                    monthsBack: 6,
+                    polys: Defaults.manchesterPolys,
+                    from: Date()
+                )
+                DispatchQueue.main.async {
+                    self.crimeList = crimes
+                }
+            } catch {
+                print("Failed to fetch crime data: \(error.localizedDescription)")
             }
         }
     }
