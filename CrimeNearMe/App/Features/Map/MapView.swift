@@ -100,13 +100,20 @@ struct MapRepresentable: UIViewRepresentable {
         let parent: MapRepresentable
         init(_ parent: MapRepresentable) { self.parent = parent }
 
+        // Update the annotation view to resize PinMarker.png to 50x50 pixels
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             if annotation is MKUserLocation { return nil }
             let id = "CrimeAnnotation"
             var view = mapView.dequeueReusableAnnotationView(withIdentifier: id)
             if view == nil {
-                view = MKPinAnnotationView(annotation: annotation, reuseIdentifier: id)
+                view = MKAnnotationView(annotation: annotation, reuseIdentifier: id)
                 view?.canShowCallout = true
+                if let pinImage = UIImage(named: "PinMarker") {
+                    let resizedImage = UIGraphicsImageRenderer(size: CGSize(width: 25, height: 25)).image { _ in
+                        pinImage.draw(in: CGRect(origin: .zero, size: CGSize(width: 25, height: 25)))
+                    }
+                    view?.image = resizedImage
+                }
             } else {
                 view?.annotation = annotation
             }
@@ -122,7 +129,7 @@ private struct AnchorDot: View {
             ZStack {
                 Circle()
                     .fill(Color.white.opacity(0.50))
-                    .frame(width: 50, height: 50)
+                    .frame(width: 25, height: 25)
 
                 // Use a bundled image asset named "PinkMarker" instead of an SF Symbol.
                 // Prefer PinkMarker; fall back to PinMarker, otherwise use an SF Symbol with effects.
