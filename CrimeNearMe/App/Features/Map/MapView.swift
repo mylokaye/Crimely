@@ -34,6 +34,7 @@ struct MapRepresentable: UIViewRepresentable {
     let showsTraffic: Bool
     let showPOI: Bool
     let showsBuildings: Bool
+    let crimes: [Crime] // Added crimes to display annotations
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -54,6 +55,15 @@ struct MapRepresentable: UIViewRepresentable {
         annotation.coordinate = center
         mapView.addAnnotation(annotation)
 
+        // Add annotations for crimes
+        for crime in crimes {
+            let crimeAnnotation = MKPointAnnotation()
+            crimeAnnotation.coordinate = crime.coordinate
+            crimeAnnotation.title = crime.category.capitalized
+            crimeAnnotation.subtitle = nil // Removed outcomeStatus reference
+            mapView.addAnnotation(crimeAnnotation)
+        }
+
         let region = MKCoordinateRegion(center: center, latitudinalMeters: Defaults.defaultRadiusMeters * 2, longitudinalMeters: Defaults.defaultRadiusMeters * 2)
         mapView.setRegion(region, animated: false)
         return mapView
@@ -67,12 +77,19 @@ struct MapRepresentable: UIViewRepresentable {
         config.pointOfInterestFilter = showPOI ? .includingAll : .excludingAll
         uiView.preferredConfiguration = config
 
-        if let annotation = uiView.annotations.first as? MKPointAnnotation {
-            annotation.coordinate = center
-        } else {
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = center
-            uiView.addAnnotation(annotation)
+        // Update annotations for crimes
+        uiView.removeAnnotations(uiView.annotations)
+
+        let anchorAnnotation = MKPointAnnotation()
+        anchorAnnotation.coordinate = center
+        uiView.addAnnotation(anchorAnnotation)
+
+        for crime in crimes {
+            let crimeAnnotation = MKPointAnnotation()
+            crimeAnnotation.coordinate = crime.coordinate
+            crimeAnnotation.title = crime.category.capitalized
+            crimeAnnotation.subtitle = nil // Removed outcomeStatus reference
+            uiView.addAnnotation(crimeAnnotation)
         }
 
         let region = MKCoordinateRegion(center: center, latitudinalMeters: Defaults.defaultRadiusMeters * 2, longitudinalMeters: Defaults.defaultRadiusMeters * 2)
@@ -85,33 +102,13 @@ struct MapRepresentable: UIViewRepresentable {
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             if annotation is MKUserLocation { return nil }
-            let id = "Anchor"
+            let id = "CrimeAnnotation"
             var view = mapView.dequeueReusableAnnotationView(withIdentifier: id)
             if view == nil {
-                view = MKAnnotationView(annotation: annotation, reuseIdentifier: id)
-                view?.canShowCallout = false
+                view = MKPinAnnotationView(annotation: annotation, reuseIdentifier: id)
+                view?.canShowCallout = true
             } else {
                 view?.annotation = annotation
-            }
-
-            // Prefer bundled PinkMarker, then PinMarker. Resize to 30x30 points for the annotation view
-            let targetSize = CGSize(width: 30, height: 30)
-            if let source = UIImage(named: "PinkMarker") ?? UIImage(named: "PinMarker") {
-                let rendererFormat = UIGraphicsImageRendererFormat.default()
-                rendererFormat.opaque = false
-                let img = UIGraphicsImageRenderer(size: targetSize, format: rendererFormat).image { _ in
-                    // Draw the source image into the target rect preserving its original rendering
-                    source.draw(in: CGRect(origin: .zero, size: targetSize))
-                }
-                view?.image = img
-            } else if let symbolImage = UIImage(systemName: "mappin.circle.fill") {
-                // Last-resort: rasterize SF Symbol to 30x30
-                let rendererFormat = UIGraphicsImageRendererFormat.default()
-                rendererFormat.opaque = false
-                let img = UIGraphicsImageRenderer(size: targetSize, format: rendererFormat).image { _ in
-                    symbolImage.withTintColor(UIColor.systemBlue).draw(in: CGRect(origin: .zero, size: targetSize))
-                }
-                view?.image = img
             }
             return view
         }
@@ -207,7 +204,8 @@ struct MapView: View {
                         center: annotationCoordinate,
                         showsTraffic: MapFeatureFlags.showsTraffic,
                         showPOI: MapFeatureFlags.showPointsOfInterest,
-                        showsBuildings: MapFeatureFlags.showsBuildings
+                        showsBuildings: MapFeatureFlags.showsBuildings,
+                        crimes: crimeList // Pass the crime list to the map representable
                     )
                     .ignoresSafeArea()
                 } else {
